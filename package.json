@@ -1,13 +1,20 @@
 {
   "name": "duobutforeverything",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite",
+    "dev:electron": "concurrently \"vite\" \"wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .\"",
     "build": "tsc -b && vite build",
+    "build:electron": "npm run build && electron-builder build --mac --win --linux",
+    "build:mac": "npm run build && electron-builder build --mac",
+    "build:win": "npm run build && electron-builder build --win",
+    "build:linux": "npm run build && electron-builder build --linux",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "release": "npm run build && electron-builder build --mac --win --linux --publish always"
   },
   "dependencies": {
     "framer-motion": "^12.42.2",
@@ -23,9 +30,14 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
+    "concurrently": "^10.0.3",
+    "cross-env": "^10.1.0",
+    "electron": "^43.1.0",
+    "electron-builder": "^26.15.3",
     "oxlint": "^1.71.0",
     "tailwindcss": "^4.3.2",
     "typescript": "~6.0.2",
-    "vite": "^8.1.1"
+    "vite": "^8.1.1",
+    "wait-on": "^9.0.10"
   }
 }

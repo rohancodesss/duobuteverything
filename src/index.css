@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@theme {
+  --color-duo-green: #58CC02;
+  --color-duo-green-dark: #46A302;
+  --color-duo-blue: #1CB0F6;
+  --color-duo-red: #FF4B4B;
+  --color-duo-orange: #FF9600;
+  --color-duo-yellow: #FFC800;
+  --color-duo-bg: #F0F0F0;
+  --color-duo-text: #4B4B4B;
+  --color-duo-text-light: #777777;
+  --color-duo-white: #FFFFFF;
+  --color-duo-border: #E5E5E5;
+  --color-duo-gold: #FFD700;
+}

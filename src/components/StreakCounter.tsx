@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import { FiFire } from 'react-icons/fi';
 import { useGameStore } from '../store/gameStore';
 
 export default function StreakCounter() {
@@ -13,7 +12,7 @@ export default function StreakCounter() {
         animate={{ scale: 1, rotate: 0 }}
         transition={{ type: 'spring', stiffness: 400, damping: 10 }}
       >
-        <FiFire className="text-duo-orange text-lg" />
+        <span className="text-lg">🔥</span>
       </motion.div>
       <span className="font-bold text-duo-orange text-sm">{streak}</span>
     </div>

@@ -8,7 +8,6 @@ export default function Dashboard() {
   const [topicInput, setTopicInput] = useState('');
   const [ollamaStatus, setOllamaStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [statusMsg, setStatusMsg] = useState('');
-  const [showSetup, setShowSetup] = useState(false);
 
   const setTopic = useGameStore((s) => s.setTopic);
   const setQuestions = useGameStore((s) => s.setQuestions);
@@ -23,7 +22,6 @@ export default function Dashboard() {
   };
 
   const handleStartSetup = async () => {
-    setShowSetup(true);
     setStatusMsg('Checking Ollama...');
     const ok = await checkOllama();
     if (!ok) {

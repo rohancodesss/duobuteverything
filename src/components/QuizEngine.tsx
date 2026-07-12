@@ -16,7 +16,6 @@ export default function QuizEngine() {
   const answerQuestion = useGameStore((s) => s.answerQuestion);
   const nextQuestion = useGameStore((s) => s.nextQuestion);
   const resetQuiz = useGameStore((s) => s.resetQuiz);
-  const hearts = useGameStore((s) => s.hearts);
 
   const question = questions[currentIndex];
   const isLast = currentIndex === questions.length - 1;

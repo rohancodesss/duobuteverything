@@ -1,0 +1,53 @@
+appId: com.rohancodesss.duobuteverything
+productName: Duo for Everything
+copyright: MIT © rohancodesss
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - dist/**/*
+  - electron/**/*
+  - package.json
+
+extraResources:
+  - from: build
+    to: build
+    filter:
+      - "**/*"
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  artifactName: "${productName}-Setup-${version}.${ext}"
+  icon: build/icon.ico
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: true
+
+mac:
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+  artifactName: "${productName}-${version}-${arch}.${ext}"
+  category: public.app-category.education
+  icon: build/icon.png
+
+dmg:
+  title: "${productName} ${version}"
+
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64
+  artifactName: "${productName}-${version}.${ext}"
+  category: Education
+  icon: build/
