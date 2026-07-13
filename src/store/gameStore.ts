@@ -28,6 +28,7 @@ interface GameStore {
   quizResult: 'idle' | 'correct' | 'incorrect';
   selectedAnswer: number | null;
   showConfetti: boolean;
+  isMuted: boolean;
 
   setView: (view: ViewState) => void;
   setTopic: (topic: string) => void;
@@ -38,6 +39,7 @@ interface GameStore {
   resetQuiz: () => void;
   loadState: () => void;
   refillHearts: () => void;
+  toggleMute:()=>void
 }
 
 function saveToStorage(state: Partial<GameStore>) {
@@ -80,6 +82,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   quizResult: 'idle',
   selectedAnswer: null,
   showConfetti: false,
+  isMuted: JSON.parse(localStorage.getItem('quiz-muted')??'false'),
 
   setView: (view) => set({ view }),
 
@@ -187,4 +190,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ hearts: 5, view: 'dashboard' });
     saveToStorage({ hearts: 5 });
   },
+
+  toggleMute:()=>set((state)=>{
+    const next = !state.isMuted;
+    localStorage.setItem('quiz-muted',JSON.stringify(next));
+    return {isMuted:next};
+  })
 }));

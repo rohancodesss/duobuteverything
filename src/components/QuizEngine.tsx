@@ -4,6 +4,8 @@ import { FiArrowRight, FiRotateCcw, FiCheck, FiX } from 'react-icons/fi';
 import { useGameStore } from '../store/gameStore';
 import ConfettiExplosion from 'react-confetti-explosion';
 import TopBar from './TopBar';
+import { playCorrectSound, playIncorrectSound } from '../lib/sound';
+
 
 const OPTION_LABELS = ['A', 'B', 'C', 'D'];
 
@@ -23,8 +25,14 @@ export default function QuizEngine() {
 
   const handleAnswer = useCallback((idx: number) => {
     if (hasAnswered) return;
+    const isCorrect = idx === question.correctAnswer;
+    const isMuted = useGameStore((s) => s.isMuted);
+    if (!isMuted) {
+      if (isCorrect) playCorrectSound();
+      else playIncorrectSound();
+    }
     answerQuestion(idx);
-  }, [hasAnswered, answerQuestion]);
+  }, [hasAnswered, answerQuestion, question]);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
