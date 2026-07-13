@@ -9,12 +9,17 @@ function createWindow() {
     height: 780,
     resizable: false,
     fullscreenable: false,
-    titleBarStyle: 'hiddenInset',
+    show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       nodeIntegration: false,
       contextIsolation: true,
+      sandbox: false,
     },
+  });
+
+  win.once('ready-to-show', () => {
+    win.show();
   });
 
   if (isDev) {
