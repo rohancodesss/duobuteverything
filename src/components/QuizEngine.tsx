@@ -5,7 +5,7 @@ import { useGameStore } from '../store/gameStore';
 import ConfettiExplosion from 'react-confetti-explosion';
 import TopBar from './TopBar';
 import { playCorrectSound, playIncorrectSound } from '../lib/sound';
-
+import Timer from './Timer';
 
 const OPTION_LABELS = ['A', 'B', 'C', 'D'];
 
@@ -18,6 +18,10 @@ export default function QuizEngine() {
   const answerQuestion = useGameStore((s) => s.answerQuestion);
   const nextQuestion = useGameStore((s) => s.nextQuestion);
   const resetQuiz = useGameStore((s) => s.resetQuiz);
+  const isMuted = useGameStore((s) => s.isMuted);
+  const isTimed = useGameStore((s)=>s.isTimed)
+  const timeLeft = useGameStore((s)=>s.timeLeft)
+  const setTimeLeft = useGameStore((s)=>s.setTimeLeft)
 
   const question = questions[currentIndex];
   const isLast = currentIndex === questions.length - 1;
@@ -26,13 +30,33 @@ export default function QuizEngine() {
   const handleAnswer = useCallback((idx: number) => {
     if (hasAnswered) return;
     const isCorrect = idx === question.correctAnswer;
-    const isMuted = useGameStore((s) => s.isMuted);
+    
     if (!isMuted) {
       if (isCorrect) playCorrectSound();
       else playIncorrectSound();
     }
     answerQuestion(idx);
-  }, [hasAnswered, answerQuestion, question]);
+  }, [hasAnswered, answerQuestion, question, isMuted]);
+  
+  useEffect(() => {
+  if (!isTimed || hasAnswered) return;
+
+  const timer = setInterval(() => {
+    setTimeLeft((prev) => Math.max(0, prev - 1));
+  }, 1000);
+
+  return () => clearInterval(timer);
+}, [isTimed, hasAnswered, setTimeLeft]);
+
+  useEffect(()=>{
+    if(!isTimed)return
+    if(hasAnswered)return
+    if(timeLeft===0){
+      answerQuestion(-1)
+    }
+  },[timeLeft, hasAnswered, isTimed, answerQuestion])
+
+
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -63,7 +87,12 @@ export default function QuizEngine() {
   return (
     <div className="min-h-screen bg-duo-bg flex flex-col">
       <TopBar />
+      
       <div className="flex-1 max-w-lg mx-auto w-full px-4 py-6 flex flex-col">
+        <Timer 
+        enabled={isTimed}
+        seconds={timeLeft}
+        />
         <div className="mb-4">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-xs font-bold text-duo-text-light bg-white px-2 py-1 rounded-lg border border-duo-border">

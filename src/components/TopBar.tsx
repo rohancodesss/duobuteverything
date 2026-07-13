@@ -2,7 +2,8 @@ import StreakCounter from './StreakCounter';
 import HeartsDisplay from './HeartsDisplay';
 import XPProgressBar from './XPProgressBar';
 import { useGameStore } from '../store/gameStore';
-import { CiVolumeHigh, CiVolumeMute } from 'react-icons/ci';
+import { CiVolumeHigh, CiVolumeMute} from 'react-icons/ci';
+
 
 export default function TopBar() {
   const isMuted = useGameStore((s) => s.isMuted);
