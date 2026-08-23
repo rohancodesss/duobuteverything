@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import type { Question, ViewState } from '../types';
-
 function getToday(): string {
   return new Date().toISOString().split('T')[0];
 }
@@ -29,7 +28,10 @@ interface GameStore {
   selectedAnswer: number | null;
   showConfetti: boolean;
   isMuted: boolean;
+  isTimed:boolean;
+  timeLeft:number;
 
+  setTimeLeft:(updater: number | ((prev: number) => number))=>void;
   setView: (view: ViewState) => void;
   setTopic: (topic: string) => void;
   setGenerating: (v: boolean) => void;
@@ -40,13 +42,14 @@ interface GameStore {
   loadState: () => void;
   refillHearts: () => void;
   toggleMute:()=>void
+  toggleTimer:()=>void
 }
 
 function saveToStorage(state: Partial<GameStore>) {
   try {
     const toSave: Record<string, unknown> = {};
     const keys: (keyof GameStore)[] = [
-      'xp', 'level', 'streak', 'lastActiveDate', 'hearts',
+      'xp', 'level', 'streak', 'lastActiveDate', 'hearts', 'isMuted', 'isTimed'
     ];
     for (const k of keys) {
       toSave[k] = (state as any)[k];
@@ -67,6 +70,9 @@ function loadFromStorage(): Partial<GameStore> | null {
 
 const XP_PER_QUESTION = 10;
 const LEVEL_UP_XP = 100;
+const FAST_ANSWER_XP_BONUS = 5;
+const FAST_ANSWER_THRESHOLD_SECONDS = 10;
+const TIMER_DURATION_SECONDS = 30;
 
 export const useGameStore = create<GameStore>((set, get) => ({
   currentTopic: '',
@@ -82,7 +88,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
   quizResult: 'idle',
   selectedAnswer: null,
   showConfetti: false,
-  isMuted: JSON.parse(localStorage.getItem('quiz-muted')??'false'),
+  isMuted: JSON.parse(localStorage.getItem('isMuted')??'false'),
+  isTimed: JSON.parse(localStorage.getItem('isTimed')??'false'),
+  timeLeft:30,
+
+  setTimeLeft: (updater: number | ((prev: number) => number)) =>
+  set((state) => ({
+    timeLeft: typeof updater === 'function' ? updater(state.timeLeft) : updater,
+  })),
 
   setView: (view) => set({ view }),
 
@@ -90,23 +103,39 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   setGenerating: (v) => set({ isGenerating: v }),
 
-  setQuestions: (questions) => set({ questions, currentQuestionIndex: 0, quizResult: 'idle', selectedAnswer: null }),
+  setQuestions: (questions) => set({ questions, currentQuestionIndex: 0, quizResult: 'idle', selectedAnswer: null, timeLeft:TIMER_DURATION_SECONDS }),
 
   answerQuestion: (selectedIndex) => {
     const state = get();
     const q = state.questions[state.currentQuestionIndex];
+    let newHearts = state.hearts;
     if (!q) return;
+    if (state.isTimed && state.timeLeft <= 0) {
+      const newHearts = Math.max(0, state.hearts - 1);
+      const nextState: Partial<GameStore> = {
+        quizResult: 'incorrect',
+        selectedAnswer: null, 
+        hearts: newHearts,
+      };
+      if (newHearts === 0) nextState.view = 'refill';
+      set(nextState as GameStore);
+      saveToStorage(nextState);
+      return;
+    }
 
     const correct = selectedIndex === q.correctAnswer;
     const today = getToday();
 
     let newStreak = state.streak;
-    let newHearts = state.hearts;
+    
     let newXp = state.xp;
     let newLevel = state.level;
     let newLastDate = state.lastActiveDate;
 
     if (correct) {
+      if (state.isTimed && state.timeLeft >= TIMER_DURATION_SECONDS - FAST_ANSWER_THRESHOLD_SECONDS) {
+        newXp += FAST_ANSWER_XP_BONUS;
+      }
       newXp += XP_PER_QUESTION;
       if (newXp >= newLevel * LEVEL_UP_XP) {
         newLevel++;
@@ -152,7 +181,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (nextIdx >= state.questions.length) {
       set({ view: 'dashboard', questions: [], currentQuestionIndex: 0, quizResult: 'idle', selectedAnswer: null });
     } else {
-      set({ currentQuestionIndex: nextIdx, quizResult: 'idle', selectedAnswer: null });
+      set({ currentQuestionIndex: nextIdx, quizResult: 'idle', selectedAnswer: null,timeLeft:30 });
     }
   },
 
@@ -165,6 +194,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       isGenerating: false,
       quizResult: 'idle',
       selectedAnswer: null,
+      timeLeft:TIMER_DURATION_SECONDS
     });
   },
 
@@ -193,7 +223,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   toggleMute:()=>set((state)=>{
     const next = !state.isMuted;
-    localStorage.setItem('quiz-muted',JSON.stringify(next));
+    localStorage.setItem('isMuted',JSON.stringify(next));
     return {isMuted:next};
+  }),
+
+  toggleTimer:()=>set((state)=>{
+    const next = !state.isTimed;
+    localStorage.setItem('isTimed',JSON.stringify(next));
+    return {isTimed:next};
   })
 }));

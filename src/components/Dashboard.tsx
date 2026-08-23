@@ -3,11 +3,14 @@ import { motion } from 'framer-motion';
 import { FiZap, FiAlertCircle, FiCheckCircle, FiDownload } from 'react-icons/fi';
 import { useGameStore } from '../store/gameStore';
 import { checkOllama, listModels, pullModel, generateQuiz, parseQuizResponse } from '../lib/ollama';
+import { CiTimer } from 'react-icons/ci';
 
 export default function Dashboard() {
   const [topicInput, setTopicInput] = useState('');
   const [ollamaStatus, setOllamaStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [statusMsg, setStatusMsg] = useState('');
+  const toggleTimer = useGameStore((s) => s.toggleTimer);
+  const isTimed = useGameStore((s) => s.isTimed);
 
   const setTopic = useGameStore((s) => s.setTopic);
   const setQuestions = useGameStore((s) => s.setQuestions);
@@ -104,7 +107,30 @@ export default function Dashboard() {
           Type any topic. Learn anything. All on-device.
         </p>
       </motion.div>
+      <div className="mt-4 flex items-center justify-between rounded-2xl border-2 border-slate-200 bg-white px-5 py-4 shadow-sm transition-all hover:border-slate-300">
+  <div className="flex items-center gap-4">
+    <div className={`flex h-10 w-10 items-center justify-center rounded-full ${isTimed ? 'bg-green-100' : 'bg-slate-100'}`}>
+      <CiTimer className={`text-2xl ${isTimed ? 'text-green-600' : 'text-slate-400'}`} />
+    </div>
+    <div>
+      <p className="font-bold text-slate-800">Timed Mode</p>
+      <p className="text-sm text-slate-500">30 seconds per question</p>
+    </div>
+  </div>
 
+  <button
+    onClick={toggleTimer}
+    className={`relative h-8 w-16 rounded-full transition-colors duration-300 ease-in-out ${
+      isTimed ? 'bg-green-500' : 'bg-slate-300'
+    }`}
+  >
+    <div
+      className={`absolute top-1 h-6 w-6 transform rounded-full bg-white shadow-sm transition-transform duration-300 ${
+        isTimed ? 'translate-x-9' : 'translate-x-1'
+      }`}
+    />
+  </button>
+</div>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0, transition: { delay: 0.1 } }}
