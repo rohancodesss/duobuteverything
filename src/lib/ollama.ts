@@ -1,3 +1,5 @@
+import type { Question, Quiz } from '../types';
+
 const OLLAMA_BASE = 'http://localhost:11434';
 const DEFAULT_MODEL = 'llama3.2:1b';
 const PULL_TIMEOUT = 300_000;
@@ -76,13 +78,49 @@ export async function generateQuiz(topic: string, model: string = DEFAULT_MODEL)
   return data.response ?? '';
 }
 
-export function parseQuizResponse(text: string): { topic: string; questions: any[] } | null {
+function normalizeQuestion(raw: unknown): Omit<Question, 'id'> | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const q = raw as Record<string, unknown>;
+  if (typeof q.question !== 'string' || !q.question.trim()) return null;
+  if (!Array.isArray(q.options) || q.options.length !== 4) return null;
+  const options = q.options.map((o) => (typeof o === 'string' || typeof o === 'number' ? String(o).trim() : ''));
+  if (options.some((o) => !o)) return null;
+  // Small models sometimes emit the index as a string ("2").
+  const correctAnswer = Number(q.correctAnswer);
+  if (!Number.isInteger(correctAnswer) || correctAnswer < 0 || correctAnswer >= options.length) return null;
+  return {
+    question: q.question.trim(),
+    options,
+    correctAnswer,
+    explanation: typeof q.explanation === 'string' ? q.explanation.trim() : '',
+  };
+}
+
+/**
+ * Extracts and validates a quiz from raw model output. Malformed questions
+ * (wrong option count, out-of-range answer index, missing text) are dropped
+ * so they can't break the quiz UI. Returns null if nothing usable remains.
+ */
+export function parseQuizResponse(text: string): Quiz | null {
   let cleaned = text.trim();
   const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
   if (jsonMatch) cleaned = jsonMatch[0];
+  let data: unknown;
   try {
-    return JSON.parse(cleaned);
+    data = JSON.parse(cleaned);
   } catch {
     return null;
   }
+  if (!data || typeof data !== 'object') return null;
+  const obj = data as Record<string, unknown>;
+  if (!Array.isArray(obj.questions)) return null;
+  const questions: Question[] = obj.questions
+    .map(normalizeQuestion)
+    .filter((q): q is Omit<Question, 'id'> => q !== null)
+    .map((q, i) => ({ id: i + 1, ...q }));
+  if (questions.length === 0) return null;
+  return {
+    topic: typeof obj.topic === 'string' ? obj.topic : '',
+    questions,
+  };
 }
