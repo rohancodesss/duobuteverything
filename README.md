@@ -59,7 +59,17 @@ Type a topic, hit **"Generate Quiz"**, and start learning!
 | **Hearts System** | Start with 5 hearts, lose 1 per wrong answer, refill screen at 0 |
 | **XP & Levels** | +10 XP per correct answer, 100 XP per level, confetti on level up |
 | **Daily Streak** | Fire icon tracks consecutive active days |
+| **Timed Mode** | Optional 30s per question; running out costs a heart, answering within 10s earns +5 bonus XP |
+| **Sound Feedback** | Correct/incorrect tones via the Web Audio API, with a mute toggle in the top bar |
+| **Keyboard Friendly** | Answer and advance without touching the mouse (see below) |
 | **Duolingo UI** | Playful colors, heavy borders, spring animations |
+
+## ⌨️ Keyboard Shortcuts
+
+| Key | Action |
+|-----|--------|
+| `1`–`4` | Select answer A–D |
+| `Enter` | Next question / see results (after answering) |
 
 ## 🏗 Project Structure
 
@@ -73,8 +83,10 @@ src/
     HeartsDisplay.tsx  # Lives system
     XPProgressBar.tsx  # XP & level progress
     RefillHearts.tsx   # Hearts refill screen
+    Timer.tsx          # Countdown bar for timed mode
   lib/
     ollama.ts          # Local AI controller (Ollama API)
+    sound.ts           # Web Audio feedback tones
   store/
     gameStore.ts       # Zustand state (gamification + persistence)
   types/
