@@ -62,8 +62,12 @@ export async function generateQuiz(topic: string, model: string = DEFAULT_MODEL)
       model,
       prompt,
       stream: false,
-      temperature: 0.7,
-      max_tokens: 4096,
+      format: 'json',
+      // Ollama ignores top-level sampling params; they must go in `options`.
+      options: {
+        temperature: 0.7,
+        num_predict: 4096,
+      },
     }),
     signal: AbortSignal.timeout(GENERATE_TIMEOUT),
   });
