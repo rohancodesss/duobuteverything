@@ -15,6 +15,7 @@ export default function QuizEngine() {
   const quizResult = useGameStore((s) => s.quizResult);
   const selectedAnswer = useGameStore((s) => s.selectedAnswer);
   const showConfetti = useGameStore((s) => s.showConfetti);
+  const lastXpGain = useGameStore((s) => s.lastXpGain);
   const answerQuestion = useGameStore((s) => s.answerQuestion);
   const nextQuestion = useGameStore((s) => s.nextQuestion);
   const resetQuiz = useGameStore((s) => s.resetQuiz);
@@ -202,7 +203,7 @@ export default function QuizEngine() {
                   <div className="flex items-center gap-2">
                     <FiCheck className="text-duo-green text-xl shrink-0" />
                     <div>
-                      <p className="font-bold text-duo-green-dark">Correct! +10 XP</p>
+                      <p className="font-bold text-duo-green-dark">Correct! +{lastXpGain} XP</p>
                       <p className="text-sm text-duo-text-light mt-1">{question.explanation}</p>
                     </div>
                   </div>
@@ -210,7 +211,9 @@ export default function QuizEngine() {
                   <div className="flex items-start gap-2">
                     <FiX className="text-duo-red text-xl shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-bold text-duo-red">Incorrect! -1 Heart</p>
+                      <p className="font-bold text-duo-red">
+                        {selectedAnswer === null ? "Time's up!" : 'Incorrect!'} -1 Heart
+                      </p>
                       <p className="text-sm text-duo-text-light mt-1">{question.explanation}</p>
                     </div>
                   </div>

@@ -26,6 +26,7 @@ interface GameStore {
   isGenerating: boolean;
   quizResult: 'idle' | 'correct' | 'incorrect';
   selectedAnswer: number | null;
+  lastXpGain: number;
   showConfetti: boolean;
   isMuted: boolean;
   isTimed:boolean;
@@ -87,6 +88,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   isGenerating: false,
   quizResult: 'idle',
   selectedAnswer: null,
+  lastXpGain: 0,
   showConfetti: false,
   isMuted: JSON.parse(localStorage.getItem('isMuted')??'false'),
   isTimed: JSON.parse(localStorage.getItem('isTimed')??'false'),
@@ -114,7 +116,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const newHearts = Math.max(0, state.hearts - 1);
       const nextState: Partial<GameStore> = {
         quizResult: 'incorrect',
-        selectedAnswer: null, 
+        selectedAnswer: null,
+        lastXpGain: 0,
         hearts: newHearts,
       };
       if (newHearts === 0) nextState.view = 'refill';
@@ -160,6 +163,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const nextState: Partial<GameStore> = {
       quizResult: correct ? 'correct' : 'incorrect',
       selectedAnswer: selectedIndex,
+      lastXpGain: newXp - state.xp,
       hearts: newHearts,
       xp: newXp,
       level: newLevel,
