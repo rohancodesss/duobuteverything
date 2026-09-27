@@ -61,11 +61,18 @@ export default function QuizEngine() {
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
+      // Holding Enter would otherwise skip through questions, and Cmd/Ctrl+1-4
+      // are app/browser shortcuts, not answers.
+      if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
       if (!hasAnswered && question) {
         const num = parseInt(e.key);
         if (num >= 1 && num <= 4) handleAnswer(num - 1);
       }
-      if (hasAnswered && e.key === 'Enter') nextQuestion();
+      if (hasAnswered && e.key === 'Enter') {
+        // Stop a focused "Next" button from also firing a click and advancing twice.
+        e.preventDefault();
+        nextQuestion();
+      }
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
