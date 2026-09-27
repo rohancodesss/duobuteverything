@@ -69,6 +69,15 @@ function loadFromStorage(): Partial<GameStore> | null {
   }
 }
 
+// Corrupt or non-boolean values must not crash store creation at startup.
+function loadBooleanPref(key: string): boolean {
+  try {
+    return JSON.parse(localStorage.getItem(key) ?? 'false') === true;
+  } catch {
+    return false;
+  }
+}
+
 const XP_PER_QUESTION = 10;
 const LEVEL_UP_XP = 100;
 const FAST_ANSWER_XP_BONUS = 5;
@@ -90,9 +99,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   selectedAnswer: null,
   lastXpGain: 0,
   showConfetti: false,
-  isMuted: JSON.parse(localStorage.getItem('isMuted')??'false'),
-  isTimed: JSON.parse(localStorage.getItem('isTimed')??'false'),
-  timeLeft:30,
+  isMuted: loadBooleanPref('isMuted'),
+  isTimed: loadBooleanPref('isTimed'),
+  timeLeft: TIMER_DURATION_SECONDS,
 
   setTimeLeft: (updater: number | ((prev: number) => number)) =>
   set((state) => ({
@@ -185,7 +194,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (nextIdx >= state.questions.length) {
       set({ view: 'dashboard', questions: [], currentQuestionIndex: 0, quizResult: 'idle', selectedAnswer: null });
     } else {
-      set({ currentQuestionIndex: nextIdx, quizResult: 'idle', selectedAnswer: null,timeLeft:30 });
+      set({ currentQuestionIndex: nextIdx, quizResult: 'idle', selectedAnswer: null, timeLeft: TIMER_DURATION_SECONDS });
     }
   },
 
