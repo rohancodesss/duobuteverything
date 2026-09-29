@@ -119,12 +119,17 @@ export default function Dashboard() {
   </div>
 
   <button
+    type="button"
+    role="switch"
+    aria-checked={isTimed}
+    aria-label="Timed Mode"
     onClick={toggleTimer}
-    className={`relative h-8 w-16 rounded-full transition-colors duration-300 ease-in-out ${
+    className={`relative h-8 w-16 rounded-full transition-colors duration-300 ease-in-out focus:outline-none focus-visible:ring-4 focus-visible:ring-green-300 ${
       isTimed ? 'bg-green-500' : 'bg-slate-300'
     }`}
   >
     <div
+      aria-hidden="true"
       className={`absolute top-1 h-6 w-6 transform rounded-full bg-white shadow-sm transition-transform duration-300 ${
         isTimed ? 'translate-x-9' : 'translate-x-1'
       }`}
