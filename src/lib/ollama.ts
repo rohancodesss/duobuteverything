@@ -15,7 +15,8 @@ export async function checkOllama(): Promise<boolean> {
 }
 
 export async function listModels(): Promise<string[]> {
-  const res = await fetch(`${OLLAMA_BASE}/api/tags`);
+  const res = await fetch(`${OLLAMA_BASE}/api/tags`, { signal: AbortSignal.timeout(5000) });
+  if (!res.ok) throw new Error(`Failed to list models: ${res.statusText}`);
   const data = await res.json();
   return (data.models ?? []).map((m: { name: string }) => m.name);
 }

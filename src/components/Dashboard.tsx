@@ -33,7 +33,14 @@ export default function Dashboard() {
     }
     setOllamaStatus('online');
     setStatusMsg('Ollama is running. Checking for llama3.2:1b...');
-    const models = await listModels();
+    let models: string[];
+    try {
+      models = await listModels();
+    } catch {
+      setOllamaStatus('offline');
+      setStatusMsg('Could not list installed models. Is Ollama still running?');
+      return;
+    }
     const hasModel = models.some((m: string) => m.startsWith('llama3.2:1b'));
     if (!hasModel) {
       setStatusMsg('Downloading llama3.2:1b (~650MB)... This may take a few minutes.');
