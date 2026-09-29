@@ -1,14 +1,22 @@
 import { create } from 'zustand';
 import type { Question, ViewState } from '../types';
+// Streak days follow the user's local calendar. toISOString() would use UTC,
+// so e.g. in UTC+5:30 a quiz before 5:30am would count toward the previous day.
+function toLocalDateString(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 function getToday(): string {
-  return new Date().toISOString().split('T')[0];
+  return toLocalDateString(new Date());
 }
 
 function isYesterday(dateStr: string): boolean {
-  const d = new Date(dateStr);
   const y = new Date();
   y.setDate(y.getDate() - 1);
-  return d.toISOString().split('T')[0] === y.toISOString().split('T')[0];
+  return dateStr === toLocalDateString(y);
 }
 
 const STORAGE_KEY = 'duo_game_state';
