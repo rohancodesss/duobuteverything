@@ -54,14 +54,16 @@ interface GameStore {
   toggleTimer:()=>void
 }
 
-function saveToStorage(state: Partial<GameStore>) {
+// Always pass the full store state (get()), not a partial update: keys missing
+// from `state` would be dropped from storage and wipe saved progress.
+function saveToStorage(state: GameStore) {
   try {
     const toSave: Record<string, unknown> = {};
     const keys: (keyof GameStore)[] = [
       'xp', 'level', 'streak', 'lastActiveDate', 'hearts', 'isMuted', 'isTimed'
     ];
     for (const k of keys) {
-      toSave[k] = (state as any)[k];
+      toSave[k] = state[k];
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
   } catch { /* noop */ }
@@ -139,7 +141,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       };
       if (newHearts === 0) nextState.view = 'refill';
       set(nextState as GameStore);
-      saveToStorage(nextState);
+      saveToStorage(get());
       return;
     }
 
@@ -193,7 +195,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
 
     set(nextState as GameStore);
-    saveToStorage(nextState);
+    saveToStorage(get());
   },
 
   nextQuestion: () => {
@@ -223,7 +225,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const saved = loadFromStorage();
     if (saved) {
       const today = getToday();
-      let { streak, lastActiveDate } = saved as { streak: number; lastActiveDate: string };
+      const { lastActiveDate } = saved as { lastActiveDate?: string };
+      let streak = (saved as any).streak ?? 0;
       if (lastActiveDate && lastActiveDate !== today && !isYesterday(lastActiveDate)) {
         streak = 0;
       }
@@ -239,7 +242,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   refillHearts: () => {
     set({ hearts: 5, view: 'dashboard' });
-    saveToStorage({ hearts: 5 });
+    saveToStorage(get());
   },
 
   toggleMute:()=>set((state)=>{
