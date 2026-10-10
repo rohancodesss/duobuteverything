@@ -31,6 +31,19 @@ export async function pullModel(model: string = DEFAULT_MODEL): Promise<void> {
   if (!res.ok) throw new Error(`Failed to pull model: ${res.statusText}`);
 }
 
+// Ollama reports failures as `{ "error": "..." }` (e.g. "model 'x' not found"),
+// which is far more useful than the bare HTTP status text.
+async function describeFailure(res: Response): Promise<string> {
+  try {
+    const data: unknown = await res.json();
+    if (data && typeof data === 'object') {
+      const { error } = data as { error?: unknown };
+      if (typeof error === 'string' && error.trim()) return error.trim();
+    }
+  } catch { /* body wasn't JSON */ }
+  return res.statusText || `HTTP ${res.status}`;
+}
+
 function buildQuizPrompt(topic: string): string {
   return `You are a quiz generator. Generate a 10-question multiple-choice quiz about: "${topic}".
 
@@ -58,23 +71,31 @@ Rules:
 
 export async function generateQuiz(topic: string, model: string = DEFAULT_MODEL): Promise<string> {
   const prompt = buildQuizPrompt(topic);
-  const res = await fetch(`${OLLAMA_BASE}/api/generate`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model,
-      prompt,
-      stream: false,
-      format: 'json',
-      // Ollama ignores top-level sampling params; they must go in `options`.
-      options: {
-        temperature: 0.7,
-        num_predict: 4096,
-      },
-    }),
-    signal: AbortSignal.timeout(GENERATE_TIMEOUT),
-  });
-  if (!res.ok) throw new Error(`Ollama generate failed: ${res.statusText}`);
+  let res: Response;
+  try {
+    res = await fetch(`${OLLAMA_BASE}/api/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        prompt,
+        stream: false,
+        format: 'json',
+        // Ollama ignores top-level sampling params; they must go in `options`.
+        options: {
+          temperature: 0.7,
+          num_predict: 4096,
+        },
+      }),
+      signal: AbortSignal.timeout(GENERATE_TIMEOUT),
+    });
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'TimeoutError') {
+      throw new Error(`Ollama took longer than ${GENERATE_TIMEOUT / 1000}s to respond. Try a shorter topic or a smaller model.`);
+    }
+    throw new Error('Could not reach Ollama. Make sure it is running (ollama serve).');
+  }
+  if (!res.ok) throw new Error(`Ollama generate failed: ${await describeFailure(res)}`);
   const data = await res.json();
   return data.response ?? '';
 }
