@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FiZap, FiAlertCircle, FiCheckCircle, FiDownload } from 'react-icons/fi';
 import { useGameStore } from '../store/gameStore';
@@ -23,6 +23,18 @@ export default function Dashboard() {
     const ok = await checkOllama();
     setOllamaStatus(ok ? 'online' : 'offline');
   };
+
+  // Probe once on mount; otherwise the status stays on "Checking..." until the
+  // user clicks it, and the Generate button never learns Ollama is offline.
+  useEffect(() => {
+    let cancelled = false;
+    checkOllama().then((ok) => {
+      if (!cancelled) setOllamaStatus(ok ? 'online' : 'offline');
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleStartSetup = async () => {
     setStatusMsg('Checking Ollama...');
@@ -58,7 +70,8 @@ export default function Dashboard() {
 
   const handleGenerate = async () => {
     const topic = topicInput.trim();
-    if (!topic) return;
+    // Enter in the topic field must respect the same guard as the disabled button.
+    if (!topic || ollamaStatus === 'offline') return;
 
     setTopic(topic);
     setGenerating(true);
