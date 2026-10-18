@@ -158,6 +158,13 @@ export default function QuizEngine() {
                     whileTap={!hasAnswered ? { scale: 0.97 } : undefined}
                     onClick={() => handleAnswer(idx)}
                     disabled={hasAnswered}
+                    aria-label={`${OPTION_LABELS[idx]}: ${option}${
+                      hasAnswered && isCorrect
+                        ? ' (correct answer)'
+                        : hasAnswered && isSelected
+                        ? ' (your answer, incorrect)'
+                        : ''
+                    }`}
                     className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl border-2 text-left transition-all ${bg}`}
                   >
                     <span className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shrink-0 ${
@@ -199,7 +206,10 @@ export default function QuizEngine() {
               exit={{ opacity: 0 }}
               className="mt-4"
             >
+              {/* Announce the result to screen readers; the colour change alone isn't perceivable. */}
               <motion.div
+                role="status"
+                aria-live="polite"
                 initial={{ height: 0 }}
                 animate={{ height: 'auto' }}
                 className={`rounded-2xl p-4 border-2 ${
