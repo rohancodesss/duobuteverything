@@ -88,6 +88,13 @@ function loadBooleanPref(key: string): boolean {
   }
 }
 
+// Saved numbers may be hand-edited or corrupt (null, "5", NaN, -3); anything
+// that isn't a whole number >= min falls back so the UI never shows NaN XP.
+function readCount(value: unknown, fallback: number, min: number): number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= min ? value : fallback;
+}
+
+const MAX_HEARTS = 5;
 const XP_PER_QUESTION = 10;
 const LEVEL_UP_XP = 100;
 const FAST_ANSWER_XP_BONUS = 5;
@@ -98,7 +105,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   currentTopic: '',
   currentQuestionIndex: 0,
   questions: [],
-  hearts: 5,
+  hearts: MAX_HEARTS,
   xp: 0,
   level: 1,
   streak: 0,
@@ -225,23 +232,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const saved = loadFromStorage();
     if (saved) {
       const today = getToday();
-      const { lastActiveDate } = saved as { lastActiveDate?: string };
-      let streak = (saved as any).streak ?? 0;
+      const lastActiveDate = typeof saved.lastActiveDate === 'string' ? saved.lastActiveDate : '';
+      let streak = readCount(saved.streak, 0, 0);
       if (lastActiveDate && lastActiveDate !== today && !isYesterday(lastActiveDate)) {
         streak = 0;
       }
       set({
-        hearts: (saved as any).hearts ?? 5,
-        xp: (saved as any).xp ?? 0,
-        level: (saved as any).level ?? 1,
+        hearts: Math.min(MAX_HEARTS, readCount(saved.hearts, MAX_HEARTS, 0)),
+        xp: readCount(saved.xp, 0, 0),
+        level: readCount(saved.level, 1, 1),
         streak,
-        lastActiveDate: lastActiveDate || '',
+        lastActiveDate,
       });
     }
   },
 
   refillHearts: () => {
-    set({ hearts: 5, view: 'dashboard' });
+    set({ hearts: MAX_HEARTS, view: 'dashboard' });
     saveToStorage(get());
   },
 
