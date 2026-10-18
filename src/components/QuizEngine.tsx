@@ -53,9 +53,11 @@ export default function QuizEngine() {
     if(!isTimed)return
     if(hasAnswered)return
     if(timeLeft===0){
+      // A timeout costs a heart like a wrong answer, so it should sound like one.
+      if(!isMuted) playIncorrectSound()
       answerQuestion(-1)
     }
-  },[timeLeft, hasAnswered, isTimed, answerQuestion])
+  },[timeLeft, hasAnswered, isTimed, isMuted, answerQuestion])
 
 
 
