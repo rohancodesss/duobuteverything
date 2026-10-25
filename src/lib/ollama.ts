@@ -45,11 +45,14 @@ async function describeFailure(res: Response): Promise<string> {
 }
 
 function buildQuizPrompt(topic: string): string {
-  return `You are a quiz generator. Generate a 10-question multiple-choice quiz about: "${topic}".
+  // A topic like `The "Big Bang" theory` would otherwise break the JSON
+  // example below, and small models copy that broken JSON verbatim.
+  const quotedTopic = JSON.stringify(topic);
+  return `You are a quiz generator. Generate a 10-question multiple-choice quiz about: ${quotedTopic}.
 
 Return ONLY valid JSON with NO markdown formatting, NO code blocks, and NO extra text. The JSON must match this exact structure:
 {
-  "topic": "${topic}",
+  "topic": ${quotedTopic},
   "questions": [
     {
       "id": 1,
