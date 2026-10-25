@@ -88,6 +88,14 @@ function loadBooleanPref(key: string): boolean {
   }
 }
 
+// setItem throws when storage is disabled or full; the toggle should still
+// work for this session instead of the click silently doing nothing.
+function saveBooleanPref(key: string, value: boolean) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch { /* noop */ }
+}
+
 // Saved numbers may be hand-edited or corrupt (null, "5", NaN, -3); anything
 // that isn't a whole number >= min falls back so the UI never shows NaN XP.
 function readCount(value: unknown, fallback: number, min: number): number {
@@ -254,13 +262,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   toggleMute:()=>set((state)=>{
     const next = !state.isMuted;
-    localStorage.setItem('isMuted',JSON.stringify(next));
+    saveBooleanPref('isMuted',next);
     return {isMuted:next};
   }),
 
   toggleTimer:()=>set((state)=>{
     const next = !state.isTimed;
-    localStorage.setItem('isTimed',JSON.stringify(next));
+    saveBooleanPref('isTimed',next);
     return {isTimed:next};
   })
 }));
