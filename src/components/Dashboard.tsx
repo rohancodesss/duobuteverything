@@ -161,10 +161,11 @@ export default function Dashboard() {
         animate={{ opacity: 1, y: 0, transition: { delay: 0.1 } }}
         className="bg-duo-white rounded-2xl border-2 border-duo-border p-6 shadow-sm mb-4"
       >
-        <label className="block text-sm font-bold text-duo-text mb-2">
+        <label htmlFor="topic-input" className="block text-sm font-bold text-duo-text mb-2">
           WHAT DO YOU WANT TO LEARN?
         </label>
         <input
+          id="topic-input"
           type="text"
           value={topicInput}
           onChange={(e) => setTopicInput(e.target.value)}
