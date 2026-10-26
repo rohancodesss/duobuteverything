@@ -22,13 +22,21 @@ export async function listModels(): Promise<string[]> {
 }
 
 export async function pullModel(model: string = DEFAULT_MODEL): Promise<void> {
-  const res = await fetch(`${OLLAMA_BASE}/api/pull`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: model, stream: false }),
-    signal: AbortSignal.timeout(PULL_TIMEOUT),
-  });
-  if (!res.ok) throw new Error(`Failed to pull model: ${res.statusText}`);
+  let res: Response;
+  try {
+    res = await fetch(`${OLLAMA_BASE}/api/pull`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: model, stream: false }),
+      signal: AbortSignal.timeout(PULL_TIMEOUT),
+    });
+  } catch (err) {
+    if (err instanceof DOMException && err.name === 'TimeoutError') {
+      throw new Error(`Download took longer than ${PULL_TIMEOUT / 60_000} minutes. Run "ollama pull ${model}" in a terminal instead.`);
+    }
+    throw new Error('Could not reach Ollama. Make sure it is running (ollama serve).');
+  }
+  if (!res.ok) throw new Error(`Failed to pull model: ${await describeFailure(res)}`);
 }
 
 // Ollama reports failures as `{ "error": "..." }` (e.g. "model 'x' not found"),

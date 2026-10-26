@@ -59,8 +59,8 @@ export default function Dashboard() {
       try {
         await pullModel();
         setStatusMsg('Model downloaded successfully!');
-      } catch {
-        setStatusMsg('Failed to download model. Check Ollama logs.');
+      } catch (err) {
+        setStatusMsg(err instanceof Error ? err.message : 'Failed to download model. Check Ollama logs.');
         return;
       }
     } else {
