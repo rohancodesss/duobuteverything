@@ -169,7 +169,9 @@ export default function Dashboard() {
           type="text"
           value={topicInput}
           onChange={(e) => setTopicInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleGenerate()}
+          // Enter that confirms an IME composition (Japanese, Chinese, Korean...)
+          // must not submit a half-typed topic.
+          onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && handleGenerate()}
           placeholder="e.g. Advanced Git, Baking Science, Roman History..."
           className="w-full px-4 py-3 text-lg border-2 border-duo-border rounded-xl focus:border-duo-green focus:outline-none transition-colors bg-gray-50"
         />
