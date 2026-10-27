@@ -31,7 +31,16 @@ export default function Timer({
         </span>
       </div>
 
-      <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+      {/* A progressbar rather than a live region: announcing every tick would drown out the question. */}
+      <div
+        role="progressbar"
+        aria-label="Time left"
+        aria-valuemin={0}
+        aria-valuemax={maxSeconds}
+        aria-valuenow={seconds}
+        aria-valuetext={`${seconds} seconds left`}
+        className="h-3 bg-gray-200 rounded-full overflow-hidden"
+      >
         <motion.div
           className={`h-full ${barColor} ${
             pulse ? 'animate-pulse' : ''

@@ -108,7 +108,15 @@ export default function QuizEngine() {
             <span className="text-xs font-bold text-duo-text-light bg-white px-2 py-1 rounded-lg border border-duo-border">
               {currentIndex + 1} / {questions.length}
             </span>
-            <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              role="progressbar"
+              aria-label="Quiz progress"
+              aria-valuemin={1}
+              aria-valuemax={questions.length}
+              aria-valuenow={currentIndex + 1}
+              aria-valuetext={`Question ${currentIndex + 1} of ${questions.length}`}
+              className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden"
+            >
               <motion.div
                 className="h-full bg-duo-green rounded-full"
                 initial={{ width: 0 }}
