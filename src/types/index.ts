@@ -11,7 +11,7 @@ export interface Quiz {
   questions: Question[];
 }
 
-export type ViewState = 'dashboard' | 'quiz' | 'refill';
+export type ViewState = 'dashboard' | 'quiz' | 'results' | 'refill';
 
 export interface GameState {
   currentTopic: string;

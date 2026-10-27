@@ -35,6 +35,8 @@ interface GameStore {
   quizResult: 'idle' | 'correct' | 'incorrect';
   selectedAnswer: number | null;
   lastXpGain: number;
+  correctCount: number;
+  quizXpEarned: number;
   showConfetti: boolean;
   isMuted: boolean;
   isTimed:boolean;
@@ -123,6 +125,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   quizResult: 'idle',
   selectedAnswer: null,
   lastXpGain: 0,
+  correctCount: 0,
+  quizXpEarned: 0,
   showConfetti: false,
   isMuted: loadBooleanPref('isMuted'),
   isTimed: loadBooleanPref('isTimed'),
@@ -139,7 +143,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   setGenerating: (v) => set({ isGenerating: v }),
 
-  setQuestions: (questions) => set({ questions, currentQuestionIndex: 0, quizResult: 'idle', selectedAnswer: null, timeLeft:TIMER_DURATION_SECONDS }),
+  setQuestions: (questions) => set({ questions, currentQuestionIndex: 0, quizResult: 'idle', selectedAnswer: null, correctCount: 0, quizXpEarned: 0, timeLeft:TIMER_DURATION_SECONDS }),
 
   answerQuestion: (selectedIndex) => {
     const state = get();
@@ -198,6 +202,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       quizResult: correct ? 'correct' : 'incorrect',
       selectedAnswer: selectedIndex,
       lastXpGain: newXp - state.xp,
+      correctCount: state.correctCount + (correct ? 1 : 0),
+      quizXpEarned: state.quizXpEarned + (newXp - state.xp),
       hearts: newHearts,
       xp: newXp,
       level: newLevel,
@@ -217,7 +223,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const state = get();
     const nextIdx = state.currentQuestionIndex + 1;
     if (nextIdx >= state.questions.length) {
-      set({ view: 'dashboard', questions: [], currentQuestionIndex: 0, quizResult: 'idle', selectedAnswer: null });
+      // Keep questions/score around for the results screen; resetQuiz clears them.
+      set({ view: 'results', quizResult: 'idle', selectedAnswer: null });
     } else {
       set({ currentQuestionIndex: nextIdx, quizResult: 'idle', selectedAnswer: null, timeLeft: TIMER_DURATION_SECONDS });
     }
@@ -232,6 +239,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       isGenerating: false,
       quizResult: 'idle',
       selectedAnswer: null,
+      correctCount: 0,
+      quizXpEarned: 0,
       timeLeft:TIMER_DURATION_SECONDS
     });
   },
