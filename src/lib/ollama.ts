@@ -111,6 +111,21 @@ export async function generateQuiz(topic: string, model: string = DEFAULT_MODEL)
   return data.response ?? '';
 }
 
+// Small models don't always follow the 0-based index rule: besides 2 they
+// emit "2", a letter ("C", "c)") or the text of the correct option itself.
+function resolveCorrectAnswer(raw: unknown, options: string[]): number | null {
+  if (typeof raw === 'number' || (typeof raw === 'string' && /^\s*\d+\s*$/.test(raw))) {
+    const idx = Number(raw);
+    return Number.isInteger(idx) && idx >= 0 && idx < options.length ? idx : null;
+  }
+  if (typeof raw !== 'string') return null;
+  const answer = raw.trim();
+  const letter = answer.match(/^([A-Da-d])[).:]?$/);
+  if (letter) return letter[1].toUpperCase().charCodeAt(0) - 65;
+  const idx = options.findIndex((o) => o.toLowerCase() === answer.toLowerCase());
+  return idx >= 0 ? idx : null;
+}
+
 function normalizeQuestion(raw: unknown): Omit<Question, 'id'> | null {
   if (!raw || typeof raw !== 'object') return null;
   const q = raw as Record<string, unknown>;
@@ -118,9 +133,8 @@ function normalizeQuestion(raw: unknown): Omit<Question, 'id'> | null {
   if (!Array.isArray(q.options) || q.options.length !== 4) return null;
   const options = q.options.map((o) => (typeof o === 'string' || typeof o === 'number' ? String(o).trim() : ''));
   if (options.some((o) => !o)) return null;
-  // Small models sometimes emit the index as a string ("2").
-  const correctAnswer = Number(q.correctAnswer);
-  if (!Number.isInteger(correctAnswer) || correctAnswer < 0 || correctAnswer >= options.length) return null;
+  const correctAnswer = resolveCorrectAnswer(q.correctAnswer, options);
+  if (correctAnswer === null) return null;
   return {
     question: q.question.trim(),
     options,
