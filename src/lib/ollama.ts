@@ -133,6 +133,9 @@ function normalizeQuestion(raw: unknown): Omit<Question, 'id'> | null {
   if (!Array.isArray(q.options) || q.options.length !== 4) return null;
   const options = q.options.map((o) => (typeof o === 'string' || typeof o === 'number' ? String(o).trim() : ''));
   if (options.some((o) => !o)) return null;
+  // Repeated options (e.g. "Paris" twice) make the question ambiguous: picking
+  // the "other" copy of the right answer would be marked wrong.
+  if (new Set(options.map((o) => o.toLowerCase())).size !== options.length) return null;
   const correctAnswer = resolveCorrectAnswer(q.correctAnswer, options);
   if (correctAnswer === null) return null;
   return {
