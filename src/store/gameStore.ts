@@ -254,12 +254,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
       if (lastActiveDate && lastActiveDate !== today && !isYesterday(lastActiveDate)) {
         streak = 0;
       }
+      const hearts = Math.min(MAX_HEARTS, readCount(saved.hearts, MAX_HEARTS, 0));
       set({
-        hearts: Math.min(MAX_HEARTS, readCount(saved.hearts, MAX_HEARTS, 0)),
+        hearts,
         xp: readCount(saved.xp, 0, 0),
         level: readCount(saved.level, 1, 1),
         streak,
         lastActiveDate,
+        // Closing the app on the refill screen saves 0 hearts; reopening it
+        // shouldn't let a quiz start with none left.
+        ...(hearts === 0 ? { view: 'refill' as const } : {}),
       });
     }
   },
