@@ -1,14 +1,23 @@
 import { motion } from 'framer-motion';
-import { FiAward, FiArrowRight } from 'react-icons/fi';
+import { FiAward, FiArrowRight, FiRotateCcw } from 'react-icons/fi';
 import { useGameStore } from '../store/gameStore';
 import TopBar from './TopBar';
 
 export default function QuizResults() {
   const topic = useGameStore((s) => s.currentTopic);
-  const total = useGameStore((s) => s.questions.length);
+  const questions = useGameStore((s) => s.questions);
+  const total = questions.length;
   const correctCount = useGameStore((s) => s.correctCount);
   const quizXpEarned = useGameStore((s) => s.quizXpEarned);
   const resetQuiz = useGameStore((s) => s.resetQuiz);
+  const setQuestions = useGameStore((s) => s.setQuestions);
+  const setView = useGameStore((s) => s.setView);
+
+  // Replays the same questions without another (slow) round trip to Ollama.
+  const retryQuiz = () => {
+    setQuestions(questions);
+    setView('quiz');
+  };
 
   const percent = total > 0 ? Math.round((correctCount / total) * 100) : 0;
   const message =
@@ -51,6 +60,15 @@ export default function QuizResults() {
           >
             Back to Dashboard <FiArrowRight />
           </button>
+
+          {total > 0 && (
+            <button
+              onClick={retryQuiz}
+              className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-duo-text-light hover:text-duo-text transition-colors"
+            >
+              <FiRotateCcw aria-hidden="true" /> Retry this quiz
+            </button>
+          )}
         </motion.div>
       </div>
     </div>
