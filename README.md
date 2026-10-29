@@ -68,7 +68,7 @@ Type a topic, hit **"Generate Quiz"**, and start learning!
 
 | Key | Action |
 |-----|--------|
-| `1`–`4` | Select answer A–D |
+| `1`–`4` or `A`–`D` | Select answer A–D |
 | `Enter` | Next question / see results (after answering) |
 
 ## 🏗 Project Structure

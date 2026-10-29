@@ -69,6 +69,9 @@ export default function QuizEngine() {
       if (!hasAnswered && question) {
         const num = parseInt(e.key);
         if (num >= 1 && num <= 4) handleAnswer(num - 1);
+        // The options are labelled A-D, so accept those letters too.
+        const letterIdx = OPTION_LABELS.indexOf(e.key.toUpperCase());
+        if (letterIdx !== -1) handleAnswer(letterIdx);
       }
       if (hasAnswered && e.key === 'Enter') {
         // Stop a focused "Next" button from also firing a click and advancing twice.
