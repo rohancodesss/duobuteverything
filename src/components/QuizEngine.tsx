@@ -234,7 +234,9 @@ export default function QuizEngine() {
                     <FiCheck className="text-duo-green text-xl shrink-0" />
                     <div>
                       <p className="font-bold text-duo-green-dark">Correct! +{lastXpGain} XP</p>
-                      <p className="text-sm text-duo-text-light mt-1">{question.explanation}</p>
+                      {question.explanation && (
+                        <p className="text-sm text-duo-text-light mt-1">{question.explanation}</p>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -244,7 +246,11 @@ export default function QuizEngine() {
                       <p className="font-bold text-duo-red">
                         {selectedAnswer === null ? "Time's up!" : 'Incorrect!'} -1 Heart
                       </p>
-                      <p className="text-sm text-duo-text-light mt-1">{question.explanation}</p>
+                      {/* Without an explanation, at least say what the right answer was. */}
+                      <p className="text-sm text-duo-text-light mt-1">
+                        {question.explanation ||
+                          `Correct answer: ${OPTION_LABELS[question.correctAnswer]}. ${question.options[question.correctAnswer]}`}
+                      </p>
                     </div>
                   </div>
                 )}
