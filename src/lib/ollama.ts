@@ -164,9 +164,17 @@ export function parseQuizResponse(text: string): Quiz | null {
   if (!data || typeof data !== 'object') return null;
   const obj = data as Record<string, unknown>;
   if (!Array.isArray(obj.questions)) return null;
+  // Small models often loop and emit the same question more than once.
+  const seen = new Set<string>();
   const questions: Question[] = obj.questions
     .map(normalizeQuestion)
     .filter((q): q is Omit<Question, 'id'> => q !== null)
+    .filter((q) => {
+      const key = q.question.toLowerCase().replace(/\s+/g, ' ');
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
     .map((q, i) => ({ id: i + 1, ...q }));
   if (questions.length === 0) return null;
   return {
