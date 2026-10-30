@@ -126,12 +126,25 @@ function resolveCorrectAnswer(raw: unknown, options: string[]): number | null {
   return idx >= 0 ? idx : null;
 }
 
+// Models often label options themselves ("A) Paris", "b. Rome"), which the UI
+// then shows next to its own A-D badge. Strip the labels only when every
+// option has one, in order, so real text like "A. Lincoln" alone is kept.
+function stripOptionLabels(options: string[]): string[] {
+  const labelled = options.map((o, i) => {
+    const m = o.match(/^([A-Da-d])\s*[).:]\s+(.+)$/);
+    return m && m[1].toUpperCase().charCodeAt(0) - 65 === i ? m[2].trim() : null;
+  });
+  return labelled.every((o) => o !== null) ? (labelled as string[]) : options;
+}
+
 function normalizeQuestion(raw: unknown): Omit<Question, 'id'> | null {
   if (!raw || typeof raw !== 'object') return null;
   const q = raw as Record<string, unknown>;
   if (typeof q.question !== 'string' || !q.question.trim()) return null;
   if (!Array.isArray(q.options) || q.options.length !== 4) return null;
-  const options = q.options.map((o) => (typeof o === 'string' || typeof o === 'number' ? String(o).trim() : ''));
+  const options = stripOptionLabels(
+    q.options.map((o) => (typeof o === 'string' || typeof o === 'number' ? String(o).trim() : '')),
+  );
   if (options.some((o) => !o)) return null;
   // Repeated options (e.g. "Paris" twice) make the question ambiguous: picking
   // the "other" copy of the right answer would be marked wrong.
