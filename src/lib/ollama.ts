@@ -112,7 +112,8 @@ export async function generateQuiz(topic: string, model: string = DEFAULT_MODEL)
 }
 
 // Small models don't always follow the 0-based index rule: besides 2 they
-// emit "2", a letter ("C", "c)") or the text of the correct option itself.
+// emit "2", a letter ("C", "c)"), the text of the correct option itself, or
+// both ("C) Paris").
 function resolveCorrectAnswer(raw: unknown, options: string[]): number | null {
   if (typeof raw === 'number' || (typeof raw === 'string' && /^\s*\d+\s*$/.test(raw))) {
     const idx = Number(raw);
@@ -123,7 +124,15 @@ function resolveCorrectAnswer(raw: unknown, options: string[]): number | null {
   const letter = answer.match(/^([A-Da-d])[).:]?$/);
   if (letter) return letter[1].toUpperCase().charCodeAt(0) - 65;
   const idx = options.findIndex((o) => o.toLowerCase() === answer.toLowerCase());
-  return idx >= 0 ? idx : null;
+  if (idx >= 0) return idx;
+  // Only trust a "letter + text" answer when both halves agree, so a
+  // contradictory "B) Paris" (Paris being C) drops the question instead.
+  const labelled = answer.match(/^([A-Da-d])\s*[).:]\s+(.+)$/);
+  if (labelled) {
+    const letterIdx = labelled[1].toUpperCase().charCodeAt(0) - 65;
+    if (options[letterIdx]?.toLowerCase() === labelled[2].trim().toLowerCase()) return letterIdx;
+  }
+  return null;
 }
 
 // Models often label options themselves ("A) Paris", "b. Rome"), which the UI
