@@ -168,23 +168,31 @@ function normalizeQuestion(raw: unknown): Omit<Question, 'id'> | null {
   };
 }
 
+// Parses the reply as-is, else the outermost {...} or [...] in it (to skip
+// code fences or chatter around the JSON). A bare array of questions has to
+// be tried as an array: its first-to-last brace span is "{...},{...}".
+function extractJson(text: string): unknown {
+  const candidates = [text, text.match(/\{[\s\S]*\}/)?.[0], text.match(/\[[\s\S]*\]/)?.[0]];
+  for (const candidate of candidates) {
+    if (!candidate) continue;
+    try {
+      return JSON.parse(candidate);
+    } catch { /* try the next candidate */ }
+  }
+  return null;
+}
+
 /**
  * Extracts and validates a quiz from raw model output. Malformed questions
  * (wrong option count, out-of-range answer index, missing text) are dropped
  * so they can't break the quiz UI. Returns null if nothing usable remains.
  */
 export function parseQuizResponse(text: string): Quiz | null {
-  let cleaned = text.trim();
-  const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-  if (jsonMatch) cleaned = jsonMatch[0];
-  let data: unknown;
-  try {
-    data = JSON.parse(cleaned);
-  } catch {
-    return null;
-  }
+  const data = extractJson(text.trim());
   if (!data || typeof data !== 'object') return null;
-  const obj = data as Record<string, unknown>;
+  // Small models sometimes skip the wrapper object and return the questions
+  // array on its own.
+  const obj = (Array.isArray(data) ? { questions: data } : data) as Record<string, unknown>;
   if (!Array.isArray(obj.questions)) return null;
   // Small models often loop and emit the same question more than once.
   const seen = new Set<string>();
