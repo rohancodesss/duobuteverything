@@ -104,7 +104,7 @@ export default function Dashboard() {
         >
           <FiZap className="text-6xl text-duo-green" />
         </motion.div>
-        <p className="text-duo-text font-semibold text-lg">{statusMsg || 'Generating quiz...'}</p>
+        <p role="status" aria-live="polite" className="text-duo-text font-semibold text-lg">{statusMsg || 'Generating quiz...'}</p>
         <p className="text-duo-text-light text-sm">The local AI model is crafting your questions</p>
       </div>
     );
@@ -213,9 +213,11 @@ export default function Dashboard() {
           Setup local model (pull llama3.2:1b)
         </button>
 
-        {statusMsg && (
-          <p className="mt-2 text-sm text-duo-text-light bg-gray-50 rounded-lg p-2">{statusMsg}</p>
-        )}
+        {/* Keep the live region mounted so screen readers announce setup
+            progress and generation errors as the text changes. */}
+        <p role="status" aria-live="polite" className={statusMsg ? 'mt-2 text-sm text-duo-text-light bg-gray-50 rounded-lg p-2' : 'sr-only'}>
+          {statusMsg}
+        </p>
       </motion.div>
     </div>
   );
