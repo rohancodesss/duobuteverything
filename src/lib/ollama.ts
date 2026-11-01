@@ -146,6 +146,20 @@ function stripOptionLabels(options: string[]): string[] {
   return labelled.every((o) => o !== null) ? (labelled as string[]) : options;
 }
 
+// The prompt's example uses correctAnswer 0 and small models copy it, so the
+// right answer is nearly always A. Shuffle (Fisher-Yates) and move the index
+// along with its option. "All/None of the above" only makes sense where the
+// model put it, so those questions keep their order.
+function shuffleOptions(options: string[], correctAnswer: number): { options: string[]; correctAnswer: number } {
+  if (options.some((o) => /\bof the above\b/i.test(o))) return { options, correctAnswer };
+  const order = options.map((_, i) => i);
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  return { options: order.map((i) => options[i]), correctAnswer: order.indexOf(correctAnswer) };
+}
+
 function normalizeQuestion(raw: unknown): Omit<Question, 'id'> | null {
   if (!raw || typeof raw !== 'object') return null;
   const q = raw as Record<string, unknown>;
@@ -162,8 +176,7 @@ function normalizeQuestion(raw: unknown): Omit<Question, 'id'> | null {
   if (correctAnswer === null) return null;
   return {
     question: q.question.trim(),
-    options,
-    correctAnswer,
+    ...shuffleOptions(options, correctAnswer),
     explanation: typeof q.explanation === 'string' ? q.explanation.trim() : '',
   };
 }
