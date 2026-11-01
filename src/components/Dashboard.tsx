@@ -9,6 +9,7 @@ export default function Dashboard() {
   const [topicInput, setTopicInput] = useState('');
   const [ollamaStatus, setOllamaStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [statusMsg, setStatusMsg] = useState('');
+  const [isSettingUp, setIsSettingUp] = useState(false);
   const toggleTimer = useGameStore((s) => s.toggleTimer);
   const isTimed = useGameStore((s) => s.isTimed);
 
@@ -36,7 +37,19 @@ export default function Dashboard() {
     };
   }, []);
 
+  // Every click would otherwise start another multi-minute pull of the same
+  // model, with their status messages overwriting each other.
   const handleStartSetup = async () => {
+    if (isSettingUp) return;
+    setIsSettingUp(true);
+    try {
+      await runSetup();
+    } finally {
+      setIsSettingUp(false);
+    }
+  };
+
+  const runSetup = async () => {
     setStatusMsg('Checking Ollama...');
     const ok = await checkOllama();
     if (!ok) {
@@ -207,10 +220,11 @@ export default function Dashboard() {
 
         <button
           onClick={handleStartSetup}
-          className="flex items-center gap-2 text-sm font-semibold text-duo-blue hover:text-duo-blue/80"
+          disabled={isSettingUp}
+          className="flex items-center gap-2 text-sm font-semibold text-duo-blue hover:text-duo-blue/80 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <FiDownload />
-          Setup local model (pull llama3.2:1b)
+          <FiDownload className={isSettingUp ? 'animate-pulse' : undefined} />
+          {isSettingUp ? 'Setting up local model...' : 'Setup local model (pull llama3.2:1b)'}
         </button>
 
         {/* Keep the live region mounted so screen readers announce setup
