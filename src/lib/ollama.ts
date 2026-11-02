@@ -150,7 +150,7 @@ function stripOptionLabels(options: string[]): string[] {
 // right answer is nearly always A. Shuffle (Fisher-Yates) and move the index
 // along with its option. "All/None of the above" only makes sense where the
 // model put it, so those questions keep their order.
-function shuffleOptions(options: string[], correctAnswer: number): { options: string[]; correctAnswer: number } {
+export function shuffleOptions(options: string[], correctAnswer: number): { options: string[]; correctAnswer: number } {
   if (options.some((o) => /\bof the above\b/i.test(o))) return { options, correctAnswer };
   const order = options.map((_, i) => i);
   for (let i = order.length - 1; i > 0; i--) {

@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { FiAward, FiArrowRight, FiRotateCcw } from 'react-icons/fi';
 import { useGameStore } from '../store/gameStore';
 import TopBar from './TopBar';
+import { shuffleOptions } from '../lib/ollama';
 
 export default function QuizResults() {
   const topic = useGameStore((s) => s.currentTopic);
@@ -14,8 +15,9 @@ export default function QuizResults() {
   const setView = useGameStore((s) => s.setView);
 
   // Replays the same questions without another (slow) round trip to Ollama.
+  // Options are reshuffled so a retry tests the answers, not their positions.
   const retryQuiz = () => {
-    setQuestions(questions);
+    setQuestions(questions.map((q) => ({ ...q, ...shuffleOptions(q.options, q.correctAnswer) })));
     setView('quiz');
   };
 
