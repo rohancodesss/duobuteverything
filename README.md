@@ -60,6 +60,7 @@ Type a topic, hit **"Generate Quiz"**, and start learning!
 | **XP & Levels** | +10 XP per correct answer, 100 XP per level, confetti on level up |
 | **Daily Streak** | Fire icon tracks consecutive active days |
 | **Timed Mode** | Optional 30s per question; running out costs a heart, answering within 10s earns +5 bonus XP |
+| **Results Screen** | Score and XP earned at the end of each quiz, with a Retry button to replay the same questions |
 | **Sound Feedback** | Correct/incorrect tones via the Web Audio API, with a mute toggle in the top bar |
 | **Keyboard Friendly** | Answer and advance without touching the mouse (see below) |
 | **Duolingo UI** | Playful colors, heavy borders, spring animations |
@@ -78,6 +79,7 @@ src/
   components/
     Dashboard.tsx      # Topic input & model setup
     QuizEngine.tsx     # Quiz UI with questions/answers
+    QuizResults.tsx    # End-of-quiz score, XP earned & retry
     TopBar.tsx         # Streak, hearts, XP bar
     StreakCounter.tsx  # Daily streak fire icon
     HeartsDisplay.tsx  # Lives system
@@ -100,7 +102,8 @@ The `ollama.ts` module handles:
 - Checking if Ollama is running
 - Listing and pulling models
 - Sending **structured prompts** that force the local model to output clean JSON
-- Parsing the response into the quiz engine's 10-question format
+- Parsing the response into the quiz engine's 10-question format, tolerating common small-model quirks (labelled options, letter answers, a bare question array) and dropping malformed or duplicate questions
+- Shuffling each question's options so the correct answer isn't always A
 
 The prompt is carefully engineered with few-shot examples and strict formatting rules so even small models (1B params) produce valid JSON.
 
