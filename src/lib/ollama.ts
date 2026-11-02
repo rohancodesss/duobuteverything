@@ -160,13 +160,25 @@ function shuffleOptions(options: string[], correctAnswer: number): { options: st
   return { options: order.map((i) => options[i]), correctAnswer: order.indexOf(correctAnswer) };
 }
 
+// Models sometimes key the options by letter instead of using an array:
+// {"A": "Paris", "B": "Rome", ...}. Accept that only when the keys are
+// exactly A-D (any case), and read them in A-D order.
+function readOptions(raw: unknown): unknown[] | null {
+  if (Array.isArray(raw)) return raw;
+  if (!raw || typeof raw !== 'object') return null;
+  const byLetter = new Map(Object.entries(raw).map(([k, v]) => [k.trim().toUpperCase(), v]));
+  if (byLetter.size !== 4 || !['A', 'B', 'C', 'D'].every((l) => byLetter.has(l))) return null;
+  return ['A', 'B', 'C', 'D'].map((l) => byLetter.get(l));
+}
+
 function normalizeQuestion(raw: unknown): Omit<Question, 'id'> | null {
   if (!raw || typeof raw !== 'object') return null;
   const q = raw as Record<string, unknown>;
   if (typeof q.question !== 'string' || !q.question.trim()) return null;
-  if (!Array.isArray(q.options) || q.options.length !== 4) return null;
+  const rawOptions = readOptions(q.options);
+  if (!rawOptions || rawOptions.length !== 4) return null;
   const options = stripOptionLabels(
-    q.options.map((o) => (typeof o === 'string' || typeof o === 'number' ? String(o).trim() : '')),
+    rawOptions.map((o) => (typeof o === 'string' || typeof o === 'number' ? String(o).trim() : '')),
   );
   if (options.some((o) => !o)) return null;
   // Repeated options (e.g. "Paris" twice) make the question ambiguous: picking
