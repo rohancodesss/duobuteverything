@@ -4,6 +4,8 @@ import { useGameStore } from '../store/gameStore';
 import TopBar from './TopBar';
 import { shuffleOptions } from '../lib/ollama';
 
+const OPTION_LABELS = ['A', 'B', 'C', 'D'];
+
 export default function QuizResults() {
   const topic = useGameStore((s) => s.currentTopic);
   const questions = useGameStore((s) => s.questions);
@@ -13,6 +15,8 @@ export default function QuizResults() {
   const resetQuiz = useGameStore((s) => s.resetQuiz);
   const setQuestions = useGameStore((s) => s.setQuestions);
   const setView = useGameStore((s) => s.setView);
+  const missedQuestions = useGameStore((s) => s.missedQuestions);
+  const missed = missedQuestions.map((i) => questions[i]).filter((q) => q !== undefined);
 
   // Replays the same questions without another (slow) round trip to Ollama.
   // Options are reshuffled so a retry tests the answers, not their positions.
@@ -53,6 +57,24 @@ export default function QuizResults() {
               <p className="text-xs font-bold text-duo-text-light">XP EARNED</p>
             </div>
           </div>
+
+          {missed.length > 0 && (
+            <section aria-labelledby="missed-heading" className="text-left mb-8">
+              <h3 id="missed-heading" className="text-sm font-black text-duo-text mb-2">
+                Review what you missed
+              </h3>
+              <ul className="max-h-60 overflow-y-auto flex flex-col gap-2 pr-1">
+                {missed.map((q) => (
+                  <li key={q.id} className="rounded-2xl border-2 border-duo-border p-3">
+                    <p className="text-sm font-semibold text-duo-text leading-snug">{q.question}</p>
+                    <p className="text-sm font-bold text-duo-green-dark mt-1">
+                      {OPTION_LABELS[q.correctAnswer]}. {q.options[q.correctAnswer]}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           {/* Focused on mount so Enter (used to advance during the quiz) continues here too. */}
           <button

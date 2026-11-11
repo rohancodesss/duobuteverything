@@ -37,6 +37,8 @@ interface GameStore {
   lastXpGain: number;
   correctCount: number;
   quizXpEarned: number;
+  // Indices into `questions` answered wrong (or timed out) this quiz, for review on the results screen.
+  missedQuestions: number[];
   showConfetti: boolean;
   isMuted: boolean;
   isTimed:boolean;
@@ -127,6 +129,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   lastXpGain: 0,
   correctCount: 0,
   quizXpEarned: 0,
+  missedQuestions: [],
   showConfetti: false,
   isMuted: loadBooleanPref('isMuted'),
   isTimed: loadBooleanPref('isTimed'),
@@ -143,7 +146,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   setGenerating: (v) => set({ isGenerating: v }),
 
-  setQuestions: (questions) => set({ questions, currentQuestionIndex: 0, quizResult: 'idle', selectedAnswer: null, correctCount: 0, quizXpEarned: 0, timeLeft:TIMER_DURATION_SECONDS }),
+  setQuestions: (questions) => set({ questions, currentQuestionIndex: 0, quizResult: 'idle', selectedAnswer: null, correctCount: 0, quizXpEarned: 0, missedQuestions: [], timeLeft:TIMER_DURATION_SECONDS }),
 
   answerQuestion: (selectedIndex) => {
     const state = get();
@@ -157,6 +160,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         selectedAnswer: null,
         lastXpGain: 0,
         hearts: newHearts,
+        missedQuestions: [...state.missedQuestions, state.currentQuestionIndex],
       };
       if (newHearts === 0) nextState.view = 'refill';
       set(nextState as GameStore);
@@ -204,6 +208,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       lastXpGain: newXp - state.xp,
       correctCount: state.correctCount + (correct ? 1 : 0),
       quizXpEarned: state.quizXpEarned + (newXp - state.xp),
+      missedQuestions: correct ? state.missedQuestions : [...state.missedQuestions, state.currentQuestionIndex],
       hearts: newHearts,
       xp: newXp,
       level: newLevel,
@@ -241,6 +246,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selectedAnswer: null,
       correctCount: 0,
       quizXpEarned: 0,
+      missedQuestions: [],
       timeLeft:TIMER_DURATION_SECONDS
     });
   },
