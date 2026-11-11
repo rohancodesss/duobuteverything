@@ -171,11 +171,29 @@ function readOptions(raw: unknown): unknown[] | null {
   return ['A', 'B', 'C', 'D'].map((l) => byLetter.get(l));
 }
 
+// Small models don't always reuse the exact field names from the prompt's
+// example: "choices" for options, "answer" or "correct_answer" for
+// correctAnswer, and so on. Take the first alias the question actually has.
+const FIELD_ALIASES = {
+  question: ['question', 'questionText', 'prompt', 'text'],
+  options: ['options', 'choices', 'answers'],
+  correctAnswer: ['correctAnswer', 'correct_answer', 'correctIndex', 'answer', 'correct'],
+  explanation: ['explanation', 'reason', 'rationale'],
+} as const;
+
+function pickField(q: Record<string, unknown>, field: keyof typeof FIELD_ALIASES): unknown {
+  for (const key of FIELD_ALIASES[field]) {
+    if (q[key] !== undefined && q[key] !== null) return q[key];
+  }
+  return undefined;
+}
+
 function normalizeQuestion(raw: unknown): Omit<Question, 'id'> | null {
   if (!raw || typeof raw !== 'object') return null;
   const q = raw as Record<string, unknown>;
-  if (typeof q.question !== 'string' || !q.question.trim()) return null;
-  const rawOptions = readOptions(q.options);
+  const questionText = pickField(q, 'question');
+  if (typeof questionText !== 'string' || !questionText.trim()) return null;
+  const rawOptions = readOptions(pickField(q, 'options'));
   if (!rawOptions || rawOptions.length !== 4) return null;
   const options = stripOptionLabels(
     rawOptions.map((o) => (typeof o === 'string' || typeof o === 'number' ? String(o).trim() : '')),
@@ -184,12 +202,13 @@ function normalizeQuestion(raw: unknown): Omit<Question, 'id'> | null {
   // Repeated options (e.g. "Paris" twice) make the question ambiguous: picking
   // the "other" copy of the right answer would be marked wrong.
   if (new Set(options.map((o) => o.toLowerCase())).size !== options.length) return null;
-  const correctAnswer = resolveCorrectAnswer(q.correctAnswer, options);
+  const correctAnswer = resolveCorrectAnswer(pickField(q, 'correctAnswer'), options);
   if (correctAnswer === null) return null;
+  const explanation = pickField(q, 'explanation');
   return {
-    question: q.question.trim(),
+    question: questionText.trim(),
     ...shuffleOptions(options, correctAnswer),
-    explanation: typeof q.explanation === 'string' ? q.explanation.trim() : '',
+    explanation: typeof explanation === 'string' ? explanation.trim() : '',
   };
 }
 
