@@ -106,9 +106,23 @@ export async function generateQuiz(topic: string, model: string = DEFAULT_MODEL)
     }
     throw new Error('Could not reach Ollama. Make sure it is running (ollama serve).');
   }
-  if (!res.ok) throw new Error(`Ollama generate failed: ${await describeFailure(res)}`);
-  const data = await res.json();
-  return data.response ?? '';
+  if (!res.ok) {
+    const reason = await describeFailure(res);
+    // A fresh Ollama install has no models yet; point at the in-app fix
+    // instead of only echoing "model 'llama3.2:1b' not found".
+    if (res.status === 404 || /not found/i.test(reason)) {
+      throw new Error(`Model "${model}" isn't installed. Click "Setup local model" below to download it, then try again.`);
+    }
+    throw new Error(`Ollama generate failed: ${reason}`);
+  }
+  let data: unknown;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error('Ollama sent back an unreadable response. Try again.');
+  }
+  const response = data && typeof data === 'object' ? (data as { response?: unknown }).response : undefined;
+  return typeof response === 'string' ? response : '';
 }
 
 // Small models don't always follow the 0-based index rule: besides 2 they
