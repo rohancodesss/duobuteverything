@@ -188,11 +188,21 @@ function pickField(q: Record<string, unknown>, field: keyof typeof FIELD_ALIASES
   return undefined;
 }
 
+// Models often number their questions ("1. What is...", "Q3: Which...",
+// "Question 2) Who..."), which duplicates the UI's own "3 / 10" counter and
+// stops the duplicate check from spotting the same question under a new number.
+function stripQuestionNumber(text: string): string {
+  // Require whitespace after the delimiter so "3.14 is roughly..." is kept.
+  const stripped = text.replace(/^\s*(?:question\s*|q)?\d{1,2}\s*[).:-]\s+/i, '').trim();
+  return stripped || text.trim();
+}
+
 function normalizeQuestion(raw: unknown): Omit<Question, 'id'> | null {
   if (!raw || typeof raw !== 'object') return null;
   const q = raw as Record<string, unknown>;
-  const questionText = pickField(q, 'question');
-  if (typeof questionText !== 'string' || !questionText.trim()) return null;
+  const rawQuestion = pickField(q, 'question');
+  if (typeof rawQuestion !== 'string' || !rawQuestion.trim()) return null;
+  const questionText = stripQuestionNumber(rawQuestion);
   const rawOptions = readOptions(pickField(q, 'options'));
   if (!rawOptions || rawOptions.length !== 4) return null;
   const options = stripOptionLabels(
