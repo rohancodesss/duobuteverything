@@ -153,6 +153,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const q = state.questions[state.currentQuestionIndex];
     let newHearts = state.hearts;
     if (!q) return;
+    // A key press and the timer hitting zero can both land before React
+    // re-renders with the answered state; only the first answer may count,
+    // or one question costs two hearts.
+    if (state.quizResult !== 'idle') return;
     if (state.isTimed && state.timeLeft <= 0) {
       const newHearts = Math.max(0, state.hearts - 1);
       const nextState: Partial<GameStore> = {
