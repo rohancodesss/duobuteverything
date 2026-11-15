@@ -185,6 +185,19 @@ function readOptions(raw: unknown): unknown[] | null {
   return ['A', 'B', 'C', 'D'].map((l) => byLetter.get(l));
 }
 
+// Some models wrap each option in an object, e.g. {"text": "Paris"} or
+// {"option": "Paris"}. Read the text out of those; anything else becomes ''
+// so the question is dropped rather than showing "[object Object]".
+function readOptionText(o: unknown): string {
+  if (typeof o === 'string' || typeof o === 'number') return String(o).trim();
+  if (o && typeof o === 'object' && !Array.isArray(o)) {
+    const { text, option, value, label } = o as Record<string, unknown>;
+    const inner = [text, option, value, label].find((v) => typeof v === 'string' || typeof v === 'number');
+    if (inner !== undefined) return String(inner).trim();
+  }
+  return '';
+}
+
 // Small models don't always reuse the exact field names from the prompt's
 // example: "choices" for options, "answer" or "correct_answer" for
 // correctAnswer, and so on. Take the first alias the question actually has.
@@ -219,9 +232,7 @@ function normalizeQuestion(raw: unknown): Omit<Question, 'id'> | null {
   const questionText = stripQuestionNumber(rawQuestion);
   const rawOptions = readOptions(pickField(q, 'options'));
   if (!rawOptions || rawOptions.length !== 4) return null;
-  const options = stripOptionLabels(
-    rawOptions.map((o) => (typeof o === 'string' || typeof o === 'number' ? String(o).trim() : '')),
-  );
+  const options = stripOptionLabels(rawOptions.map(readOptionText));
   if (options.some((o) => !o)) return null;
   // Repeated options (e.g. "Paris" twice) make the question ambiguous: picking
   // the "other" copy of the right answer would be marked wrong.
