@@ -5,6 +5,10 @@ import { useGameStore } from '../store/gameStore';
 import { checkOllama, listModels, pullModel, generateQuiz, parseQuizResponse } from '../lib/ollama';
 import { CiTimer } from 'react-icons/ci';
 
+// A pasted paragraph would bloat the prompt (and the model's echoed "topic"),
+// slowing generation on small local models; a topic is a few words.
+const MAX_TOPIC_LENGTH = 120;
+
 export default function Dashboard() {
   const [topicInput, setTopicInput] = useState('');
   const [ollamaStatus, setOllamaStatus] = useState<'checking' | 'online' | 'offline'>('checking');
@@ -181,6 +185,7 @@ export default function Dashboard() {
           id="topic-input"
           type="text"
           value={topicInput}
+          maxLength={MAX_TOPIC_LENGTH}
           onChange={(e) => setTopicInput(e.target.value)}
           // Enter that confirms an IME composition (Japanese, Chinese, Korean...)
           // must not submit a half-typed topic.
