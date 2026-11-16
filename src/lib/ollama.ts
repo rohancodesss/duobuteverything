@@ -261,6 +261,22 @@ function extractJson(text: string): unknown {
   return null;
 }
 
+// Models don't always call the list "questions": {"quiz": [...]},
+// {"items": [...]}, or one level deeper as {"quiz": {"questions": [...]}}.
+const QUESTION_LIST_KEYS = ['questions', 'quiz', 'items', 'data'];
+
+function findQuestionList(obj: Record<string, unknown>, depth = 0): unknown[] | null {
+  for (const key of QUESTION_LIST_KEYS) {
+    const value = obj[key];
+    if (Array.isArray(value)) return value;
+    if (depth === 0 && value && typeof value === 'object') {
+      const nested = findQuestionList(value as Record<string, unknown>, 1);
+      if (nested) return nested;
+    }
+  }
+  return null;
+}
+
 /**
  * Extracts and validates a quiz from raw model output. Malformed questions
  * (wrong option count, out-of-range answer index, missing text) are dropped
@@ -272,10 +288,11 @@ export function parseQuizResponse(text: string): Quiz | null {
   // Small models sometimes skip the wrapper object and return the questions
   // array on its own.
   const obj = (Array.isArray(data) ? { questions: data } : data) as Record<string, unknown>;
-  if (!Array.isArray(obj.questions)) return null;
+  const rawQuestions = findQuestionList(obj);
+  if (!rawQuestions) return null;
   // Small models often loop and emit the same question more than once.
   const seen = new Set<string>();
-  const questions: Question[] = obj.questions
+  const questions: Question[] = rawQuestions
     .map(normalizeQuestion)
     .filter((q): q is Omit<Question, 'id'> => q !== null)
     .filter((q) => {
