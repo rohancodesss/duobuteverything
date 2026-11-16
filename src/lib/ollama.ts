@@ -256,9 +256,36 @@ function extractJson(text: string): unknown {
     if (!candidate) continue;
     try {
       return JSON.parse(candidate);
+    } catch { /* try the repaired candidate */ }
+    try {
+      return JSON.parse(removeTrailingCommas(candidate));
     } catch { /* try the next candidate */ }
   }
   return null;
+}
+
+// Small models often leave a trailing comma after the last option or
+// question (`"D",]` / `},]`), which JSON.parse rejects outright. Commas
+// inside string values are skipped so text like "a, ]" is left untouched.
+function removeTrailingCommas(json: string): string {
+  let out = '';
+  let inString = false;
+  for (let i = 0; i < json.length; i++) {
+    const ch = json[i];
+    if (inString) {
+      out += ch;
+      if (ch === '\\') out += json[++i] ?? '';
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') inString = true;
+    if (ch === ',') {
+      const rest = json.slice(i + 1).match(/^\s*([}\]])/);
+      if (rest) continue;
+    }
+    out += ch;
+  }
+  return out;
 }
 
 // Models don't always call the list "questions": {"quiz": [...]},
