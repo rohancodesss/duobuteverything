@@ -109,6 +109,10 @@ export default function Dashboard() {
     } catch (err) {
       setStatusMsg(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
       setGenerating(false);
+      // Ollama may have stopped since the last check; re-probe so the status
+      // line and the disabled Generate button reflect it instead of "Connected".
+      const ok = await checkOllama();
+      setOllamaStatus(ok ? 'online' : 'offline');
     }
   };
 
