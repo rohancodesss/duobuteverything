@@ -127,8 +127,13 @@ export async function generateQuiz(topic: string, model: string = DEFAULT_MODEL)
 
 // Small models don't always follow the 0-based index rule: besides 2 they
 // emit "2", a letter ("C", "c)"), the text of the correct option itself, or
-// both ("C) Paris").
+// both ("C) Paris"). Some also wrap the answer in a one-item array ([2],
+// ["C"]); unwrap that, but a list of several answers is ambiguous.
 function resolveCorrectAnswer(raw: unknown, options: string[]): number | null {
+  if (Array.isArray(raw)) {
+    if (raw.length !== 1 || Array.isArray(raw[0])) return null;
+    raw = raw[0];
+  }
   if (typeof raw === 'number' || (typeof raw === 'string' && /^\s*\d+\s*$/.test(raw))) {
     const idx = Number(raw);
     return Number.isInteger(idx) && idx >= 0 && idx < options.length ? idx : null;
