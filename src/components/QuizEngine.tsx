@@ -74,7 +74,9 @@ export default function QuizEngine() {
         if (letterIdx !== -1) handleAnswer(letterIdx);
       }
       if (hasAnswered && e.key === 'Enter') {
-        // Stop a focused "Next" button from also firing a click and advancing twice.
+        // A focused button handles Enter itself: "Next" advances once on its
+        // own, and "Quit" must quit rather than skip to the next question.
+        if (e.target instanceof HTMLButtonElement) return;
         e.preventDefault();
         nextQuestion();
       }
