@@ -266,7 +266,47 @@ function extractJson(text: string): unknown {
       return JSON.parse(removeTrailingCommas(candidate));
     } catch { /* try the next candidate */ }
   }
+  const salvaged = closeTruncatedJson(text);
+  if (salvaged) {
+    try {
+      return JSON.parse(removeTrailingCommas(salvaged));
+    } catch { /* nothing usable */ }
+  }
   return null;
+}
+
+// When the model hits its token limit the reply stops mid-question, and the
+// whole quiz used to be thrown away. Cut the text back to the last array
+// element that was fully closed and append the brackets still open, so the
+// questions that did finish are kept. Returns null if nothing was truncated.
+function closeTruncatedJson(text: string): string | null {
+  const start = text.search(/[{[]/);
+  if (start < 0) return null;
+  const stack: string[] = [];
+  let inString = false;
+  let cut = -1;
+  let openAtCut: string[] = [];
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i];
+    if (inString) {
+      if (ch === '\\') i++;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') inString = true;
+    else if (ch === '{' || ch === '[') stack.push(ch);
+    else if (ch === '}' || ch === ']') {
+      stack.pop();
+      if (stack.length === 0) return null; // the JSON closed normally
+      if (ch === '}' && stack[stack.length - 1] === '[') {
+        cut = i + 1;
+        openAtCut = [...stack];
+      }
+    }
+  }
+  if (cut < 0) return null;
+  const closers = openAtCut.reverse().map((b) => (b === '{' ? '}' : ']')).join('');
+  return text.slice(start, cut) + closers;
 }
 
 // Small models often leave a trailing comma after the last option or
