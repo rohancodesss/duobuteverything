@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FiZap, FiAlertCircle, FiCheckCircle, FiDownload } from 'react-icons/fi';
 import { useGameStore } from '../store/gameStore';
-import { checkOllama, listModels, pullModel, generateQuiz, parseQuizResponse } from '../lib/ollama';
+import { DEFAULT_MODEL, checkOllama, listModels, pullModel, generateQuiz, parseQuizResponse } from '../lib/ollama';
 import { CiTimer } from 'react-icons/ci';
 
 // A pasted paragraph would bloat the prompt (and the model's echoed "topic"),
@@ -61,7 +61,7 @@ export default function Dashboard() {
       return;
     }
     setOllamaStatus('online');
-    setStatusMsg('Ollama is running. Checking for llama3.2:1b...');
+    setStatusMsg(`Ollama is running. Checking for ${DEFAULT_MODEL}...`);
     let models: string[];
     try {
       models = await listModels();
@@ -70,9 +70,12 @@ export default function Dashboard() {
       setStatusMsg('Could not list installed models. Is Ollama still running?');
       return;
     }
-    const hasModel = models.some((m: string) => m.startsWith('llama3.2:1b'));
+    // Match the exact tag quizzes are generated with: a prefix match also
+    // accepted variants like "llama3.2:1b-instruct-fp16", reporting "Ready!"
+    // while generation then failed with "model not found".
+    const hasModel = models.includes(DEFAULT_MODEL);
     if (!hasModel) {
-      setStatusMsg('Downloading llama3.2:1b (~650MB)... This may take a few minutes.');
+      setStatusMsg(`Downloading ${DEFAULT_MODEL} (~650MB)... This may take a few minutes.`);
       try {
         await pullModel();
         setStatusMsg('Model downloaded successfully!');
@@ -233,7 +236,7 @@ export default function Dashboard() {
           className="flex items-center gap-2 text-sm font-semibold text-duo-blue hover:text-duo-blue/80 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <FiDownload className={isSettingUp ? 'animate-pulse' : undefined} />
-          {isSettingUp ? 'Setting up local model...' : 'Setup local model (pull llama3.2:1b)'}
+          {isSettingUp ? 'Setting up local model...' : `Setup local model (pull ${DEFAULT_MODEL})`}
         </button>
 
         {/* Keep the live region mounted so screen readers announce setup

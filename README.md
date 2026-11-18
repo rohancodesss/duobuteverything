@@ -128,8 +128,10 @@ The prompt is carefully engineered with few-shot examples and strict formatting 
 
 Edit `src/lib/ollama.ts`:
 ```typescript
-const DEFAULT_MODEL = 'llama3.2:1b'; // Change to any Ollama model
+export const DEFAULT_MODEL = 'llama3.2:1b'; // Change to any Ollama model
 ```
+
+Use the full tag (e.g. `llama3.1:8b`): the setup button checks for and pulls exactly this name, and the dashboard text follows it.
 
 Larger models (llama3.1:8b, phi4, mistral) produce better quizzes but run slower.
 

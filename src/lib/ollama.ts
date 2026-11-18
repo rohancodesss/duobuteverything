@@ -1,7 +1,7 @@
 import type { Question, Quiz } from '../types';
 
 const OLLAMA_BASE = 'http://localhost:11434';
-const DEFAULT_MODEL = 'llama3.2:1b';
+export const DEFAULT_MODEL = 'llama3.2:1b';
 const PULL_TIMEOUT = 300_000;
 const GENERATE_TIMEOUT = 120_000;
 
