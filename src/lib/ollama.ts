@@ -125,8 +125,12 @@ export async function generateQuiz(topic: string, model: string = DEFAULT_MODEL)
   return typeof response === 'string' ? response : '';
 }
 
+// A letter label in front of option text: "A) Paris", "b. Rome", and the
+// parenthesized "(C) Berlin" some models use.
+const OPTION_LABEL = /^(?:\(([A-Da-d])\)|([A-Da-d])\s*[).:])\s+(.+)$/;
+
 // Small models don't always follow the 0-based index rule: besides 2 they
-// emit "2", a letter ("C", "c)"), the text of the correct option itself, or
+// emit "2", a letter ("C", "c)", "(C)"), the text of the correct option itself, or
 // both ("C) Paris"). Some also wrap the answer in a one-item array ([2],
 // ["C"]); unwrap that, but a list of several answers is ambiguous.
 function resolveCorrectAnswer(raw: unknown, options: string[]): number | null {
@@ -140,16 +144,16 @@ function resolveCorrectAnswer(raw: unknown, options: string[]): number | null {
   }
   if (typeof raw !== 'string') return null;
   const answer = raw.trim();
-  const letter = answer.match(/^([A-Da-d])[).:]?$/);
-  if (letter) return letter[1].toUpperCase().charCodeAt(0) - 65;
+  const letter = answer.match(/^(?:\(([A-Da-d])\)|([A-Da-d])[).:]?)$/);
+  if (letter) return (letter[1] ?? letter[2]).toUpperCase().charCodeAt(0) - 65;
   const idx = options.findIndex((o) => o.toLowerCase() === answer.toLowerCase());
   if (idx >= 0) return idx;
   // Only trust a "letter + text" answer when both halves agree, so a
   // contradictory "B) Paris" (Paris being C) drops the question instead.
-  const labelled = answer.match(/^([A-Da-d])\s*[).:]\s+(.+)$/);
+  const labelled = answer.match(OPTION_LABEL);
   if (labelled) {
-    const letterIdx = labelled[1].toUpperCase().charCodeAt(0) - 65;
-    if (options[letterIdx]?.toLowerCase() === labelled[2].trim().toLowerCase()) return letterIdx;
+    const letterIdx = (labelled[1] ?? labelled[2]).toUpperCase().charCodeAt(0) - 65;
+    if (options[letterIdx]?.toLowerCase() === labelled[3].trim().toLowerCase()) return letterIdx;
   }
   return null;
 }
@@ -159,8 +163,8 @@ function resolveCorrectAnswer(raw: unknown, options: string[]): number | null {
 // option has one, in order, so real text like "A. Lincoln" alone is kept.
 function stripOptionLabels(options: string[]): string[] {
   const labelled = options.map((o, i) => {
-    const m = o.match(/^([A-Da-d])\s*[).:]\s+(.+)$/);
-    return m && m[1].toUpperCase().charCodeAt(0) - 65 === i ? m[2].trim() : null;
+    const m = o.match(OPTION_LABEL);
+    return m && (m[1] ?? m[2]).toUpperCase().charCodeAt(0) - 65 === i ? m[3].trim() : null;
   });
   return labelled.every((o) => o !== null) ? (labelled as string[]) : options;
 }
