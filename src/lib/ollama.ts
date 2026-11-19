@@ -372,7 +372,9 @@ export function parseQuizResponse(text: string): Quiz | null {
     .map(normalizeQuestion)
     .filter((q): q is Omit<Question, 'id'> => q !== null)
     .filter((q) => {
-      const key = q.question.toLowerCase().replace(/\s+/g, ' ');
+      // Ignore case, spacing and trailing punctuation, so "Capital of
+      // France?" and "capital of France" count as the same question.
+      const key = q.question.toLowerCase().replace(/\s+/g, ' ').replace(/[\s?.!:]+$/, '');
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
