@@ -140,7 +140,12 @@ function resolveCorrectAnswer(raw: unknown, options: string[]): number | null {
   }
   if (typeof raw === 'number' || (typeof raw === 'string' && /^\s*\d+\s*$/.test(raw))) {
     const idx = Number(raw);
-    return Number.isInteger(idx) && idx >= 0 && idx < options.length ? idx : null;
+    if (Number.isInteger(idx) && idx >= 0 && idx < options.length) return idx;
+    // Math quizzes have numeric options, and models often give the answer's
+    // value instead of its index: 8 for ["2", "4", "6", "8"]. An out-of-range
+    // index can't be meant as one, so fall back to matching the option text.
+    const byValue = options.findIndex((o) => o === String(raw).trim());
+    return byValue >= 0 ? byValue : null;
   }
   if (typeof raw !== 'string') return null;
   const answer = raw.trim();
