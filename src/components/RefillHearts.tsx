@@ -17,7 +17,7 @@ export default function RefillHearts() {
           transition={{ repeat: Infinity, duration: 1.5 }}
           className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-red-50 mb-6"
         >
-          <FiHeart className="text-5xl text-duo-red" style={{ fill: '#FF4B4B' }} />
+          <FiHeart className="text-5xl text-duo-red" style={{ fill: '#FF4B4B' }} aria-hidden="true" />
         </motion.div>
 
         <h2 className="text-2xl font-black text-duo-text mb-2">No Hearts Left!</h2>
@@ -25,11 +25,14 @@ export default function RefillHearts() {
           You ran out of hearts. Practice more to earn them back!
         </p>
 
+        {/* Losing the last heart usually happens mid-quiz from the keyboard
+            (1-4 / A-D); focus the button so Enter refills without the mouse. */}
         <button
+          autoFocus
           onClick={refillHearts}
           className="w-full bg-duo-green hover:bg-duo-green-dark text-white font-bold text-lg py-4 rounded-2xl border-b-4 border-duo-green-dark hover:border-duo-green-dark/80 active:border-b-2 active:mt-[18px] transition-all flex items-center justify-center gap-2"
         >
-          <FiRotateCcw /> Refill Hearts (5)
+          <FiRotateCcw aria-hidden="true" /> Refill Hearts (5)
         </button>
 
         <p className="mt-4 text-xs text-duo-text-light">
