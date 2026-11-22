@@ -149,10 +149,13 @@ function resolveCorrectAnswer(raw: unknown, options: string[]): number | null {
   }
   if (typeof raw !== 'string') return null;
   const answer = raw.trim();
-  const letter = answer.match(/^(?:\(([A-Da-d])\)|([A-Da-d])[).:]?)$/);
-  if (letter) return (letter[1] ?? letter[2]).toUpperCase().charCodeAt(0) - 65;
+  // Check the option text before reading a letter: when the options are
+  // letters themselves (notes ["C", "G", "E", "B"], grades), "B" names that
+  // option, not the second position.
   const idx = options.findIndex((o) => o.toLowerCase() === answer.toLowerCase());
   if (idx >= 0) return idx;
+  const letter = answer.match(/^(?:\(([A-Da-d])\)|([A-Da-d])[).:]?)$/);
+  if (letter) return (letter[1] ?? letter[2]).toUpperCase().charCodeAt(0) - 65;
   // Only trust a "letter + text" answer when both halves agree, so a
   // contradictory "B) Paris" (Paris being C) drops the question instead.
   const labelled = answer.match(OPTION_LABEL);
