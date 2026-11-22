@@ -258,8 +258,15 @@ export default function QuizEngine() {
                 )}
               </motion.div>
 
+              {/* The answered option just became disabled and lost focus, so
+                  move it here or Tab restarts from the top of the page. Holding
+                  Enter on an option must not also click through this button. */}
               <button
+                autoFocus
                 onClick={nextQuestion}
+                onKeyDown={(e) => {
+                  if (e.repeat) e.preventDefault();
+                }}
                 className="w-full mt-3 bg-duo-green hover:bg-duo-green-dark text-white font-bold text-lg py-4 rounded-2xl border-b-4 border-duo-green-dark hover:border-duo-green-dark/80 active:border-b-2 active:mt-[18px] transition-all flex items-center justify-center gap-2"
               >
                 {isLast ? 'See Results' : 'Next Question'}
