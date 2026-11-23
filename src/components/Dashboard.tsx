@@ -57,6 +57,8 @@ export default function Dashboard() {
     setStatusMsg('Checking Ollama...');
     const ok = await checkOllama();
     if (!ok) {
+      // Keep the status line and Generate button in step with this message.
+      setOllamaStatus('offline');
       setStatusMsg('Ollama is not running. Please start Ollama first (ollama serve).');
       return;
     }
