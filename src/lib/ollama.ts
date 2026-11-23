@@ -154,7 +154,9 @@ function resolveCorrectAnswer(raw: unknown, options: string[]): number | null {
   // option, not the second position.
   const idx = options.findIndex((o) => o.toLowerCase() === answer.toLowerCase());
   if (idx >= 0) return idx;
-  const letter = answer.match(/^(?:\(([A-Da-d])\)|([A-Da-d])[).:]?)$/);
+  // Models also spell the letter out: "Option C", "Answer: b", "Choice (D)".
+  const bareLetter = answer.replace(/^(?:option|answer|choice)\s*[:#-]?\s*/i, '');
+  const letter = bareLetter.match(/^(?:\(([A-Da-d])\)|([A-Da-d])[).:]?)$/);
   if (letter) return (letter[1] ?? letter[2]).toUpperCase().charCodeAt(0) - 65;
   // Only trust a "letter + text" answer when both halves agree, so a
   // contradictory "B) Paris" (Paris being C) drops the question instead.
