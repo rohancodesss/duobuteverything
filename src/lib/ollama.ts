@@ -377,7 +377,9 @@ export function parseQuizResponse(text: string): Quiz | null {
   // Small models sometimes skip the wrapper object and return the questions
   // array on its own.
   const obj = (Array.isArray(data) ? { questions: data } : data) as Record<string, unknown>;
-  const rawQuestions = findQuestionList(obj);
+  // Some replies are just one question object with no list around it; a short
+  // quiz beats failing the whole generation.
+  const rawQuestions = findQuestionList(obj) ?? (normalizeQuestion(obj) ? [obj] : null);
   if (!rawQuestions) return null;
   // Small models often loop and emit the same question more than once.
   const seen = new Set<string>();
