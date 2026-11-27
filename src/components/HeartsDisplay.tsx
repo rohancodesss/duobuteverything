@@ -7,10 +7,17 @@ export default function HeartsDisplay() {
   const maxHearts = 5;
 
   return (
-    <div className="flex items-center gap-0.5">
+    // The heart icons carry no text, so name the group with the count instead.
+    <div
+      className="flex items-center gap-0.5"
+      role="img"
+      aria-label={`${hearts} of ${maxHearts} hearts left`}
+      title={`${hearts} of ${maxHearts} hearts left`}
+    >
       {Array.from({ length: maxHearts }, (_, i) => (
         <motion.div
           key={i}
+          aria-hidden="true"
           initial={i >= hearts ? { scale: 1 } : false}
           animate={i >= hearts ? { scale: 0, opacity: 0 } : { scale: 1, opacity: 1 }}
           transition={{ duration: 0.3, delay: (i - hearts) * 0.1 }}
