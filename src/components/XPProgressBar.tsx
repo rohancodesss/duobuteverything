@@ -7,15 +7,25 @@ export default function XPProgressBar() {
   const xp = useGameStore((s) => s.xp);
   const level = useGameStore((s) => s.level);
 
-  const xpInLevel = xp - (level - 1) * LEVEL_UP_XP;
-  const progress = Math.min(xpInLevel / LEVEL_UP_XP, 1);
+  // Saved xp and level are validated separately, so they can disagree (e.g. a
+  // hand-edited level 5 with 30 XP); clamp so the bar never gets a negative width.
+  const xpInLevel = Math.min(Math.max(xp - (level - 1) * LEVEL_UP_XP, 0), LEVEL_UP_XP);
+  const progress = xpInLevel / LEVEL_UP_XP;
 
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs font-bold text-duo-text-light min-w-[32px] text-right">
         Lv.{level}
       </span>
-      <div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden border border-gray-300">
+      <div
+        role="progressbar"
+        aria-label={`Level ${level} progress`}
+        aria-valuemin={0}
+        aria-valuemax={LEVEL_UP_XP}
+        aria-valuenow={xpInLevel}
+        aria-valuetext={`${xpInLevel} of ${LEVEL_UP_XP} XP to level ${level + 1}`}
+        className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden border border-gray-300"
+      >
         <motion.div
           className="h-full bg-gradient-to-r from-duo-green to-duo-green-dark rounded-full"
           initial={{ width: 0 }}
